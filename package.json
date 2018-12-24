@@ -1,0 +1,30 @@
+{
+  "name": "@alicloud/http-core-sdk",
+  "version": "1.0.0",
+  "description": "Node.js OpenAPI core SDK for HTTP",
+  "main": "lib/core.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "lint": "eslint --fix lib",
+    "test": "mocha --reporter spec --timeout 3000 test/*.test.js",
+    "test-cov": "nyc -r=lcov -r=html -r=text -r=json mocha -t 3000 -R spec test/*.test.js",
+    "ci": "npm run test-cov && cat ./coverage/lcov.info | coveralls"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:aliyun/nodejs-http-core-sdk.git"
+  },
+  "author": "Jackson Tian",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2"
+  },
+  "dependencies": {
+    "httpx": "^2.1.3"
+  }
+}
