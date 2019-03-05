@@ -10,7 +10,12 @@ const {
 
 const server = http.createServer((req, res) => {
   const urlObj = url.parse(req.url, true);
-  if (urlObj.pathname === '/timeout') {
+  if (urlObj.pathname === '/readTimeout') {
+    setTimeout(() => {
+      res.writeHead(200, {'Content-Type': 'text/plain'});
+      res.end('Hello world!');
+    }, 200);
+  } else if (urlObj.pathname === '/timeout') {
     setTimeout(() => {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('Hello world!');
@@ -97,6 +102,27 @@ describe('httpx', () => {
       assert.equal(ex.name, 'RequestTimeoutError');
       const port = server.address().port;
       assert.equal(ex.message, `Timeout(100). GET http://127.0.0.1:${port}/timeout failed.`);
+      return;
+    }
+
+    assert.ok(false, 'should not ok');
+  });
+
+  it('timeout should ok', async function () {
+    var request = {
+      pathname: '/readTimeout',
+      port: server.address().port,
+      headers: {
+        host: '127.0.0.1',
+      }
+    };
+
+    try {
+      await $send(request, { readTimeout: 100, connectTimeout: 50 });
+    } catch (ex) {
+      assert.equal(ex.name, 'RequestTimeoutError');
+      const port = server.address().port;
+      assert.equal(ex.message, `Timeout(100). GET http://127.0.0.1:${port}/readTimeout failed.`);
       return;
     }
 
