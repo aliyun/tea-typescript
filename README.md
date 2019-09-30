@@ -1,11 +1,14 @@
-# Node.js Core SDK
+# Tea Support SDK for TypeScript/Node.js
 
 Core SDK 用于处理底层的 HTTP/HTTPS 协议的请求和接受。
 
-## 设计理念：
+## Installation
 
-1. coresdk 提供两个方法：$send()/$read()
-2. $send() 方法接受一个 request 参数。该参数包含 URI 描述、Headers、Method、Body。
+它在生成的 SDK 中被应用
+
+```sh
+$ npm install @alicloud/tea-typescript
+```
 
 ## URL 规范
 
