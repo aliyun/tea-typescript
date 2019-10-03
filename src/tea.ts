@@ -85,8 +85,8 @@ export class Model {
             return;
         }
         let clz = <any>this.constructor;
-        let names = <{[key: string]: string }>clz.names;
-        let types = <{[key: string]: any }>clz.types;
+        let names = <{[key: string]: string }>clz.names();
+        let types = <{[key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
             this[name] = map[name];
         }));
@@ -95,8 +95,8 @@ export class Model {
     toMap(): {[key: string]: string} {
         const map : {[key: string]: string} = {};
         let clz = <any>this.constructor;
-        let names = <{[key: string]: string }>clz.names;
-        let types = <{[key: string]: any }>clz.types;
+        let names = <{[key: string]: string }>clz.names();
+        let types = <{[key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
             const originName = names[name];
             map[originName] = this[name];
