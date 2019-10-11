@@ -3,7 +3,7 @@ import { IncomingMessage, IncomingHttpHeaders } from 'http';
 
 import * as httpx from 'httpx';
 
-type Dict = {[key: string]: string};
+type Dict = { [key: string]: string };
 
 export class Request {
     protocol: string;
@@ -18,7 +18,7 @@ export class Request {
 export class Response {
     statusCode: number;
     statusMessage: string;
-    headers: {[key: string]: string};
+    headers: { [key: string]: string };
     _response: IncomingMessage;
     constructor(res: IncomingMessage) {
         this.statusCode = res.statusCode;
@@ -55,7 +55,7 @@ function buildURL(request: Request) {
     return url;
 }
 
-export async function doAction(request: Request): Promise<Response> {
+export async function doAction(request: Request, runtime: { [key: string]: any } = null): Promise<Response> {
     let url = buildURL(request);
     let method = request.method.toUpperCase();
     let options: httpx.Options = {
@@ -65,6 +65,14 @@ export async function doAction(request: Request): Promise<Response> {
 
     if (method !== 'GET' && method !== 'HEAD') {
         options.data = request.body;
+    }
+
+    if (typeof runtime.timeout !== 'undefined') {
+        options.timeout = Number(runtime.timeout);
+    }
+
+    if (typeof runtime.ignoreSSL !== 'undefined') {
+        options.rejectUnauthorized = !!runtime.ignoreSSL;
     }
 
     let response = await httpx.request(url, options);
@@ -80,23 +88,23 @@ export function newError(data: any): Error {
 export class Model {
     [key: string]: any
 
-    constructor(map?: {[key: string]: string}) {
+    constructor(map?: { [key: string]: string }) {
         if (map == null) {
             return;
         }
         let clz = <any>this.constructor;
-        let names = <{[key: string]: string }>clz.names();
-        let types = <{[key: string]: any }>clz.types();
+        let names = <{ [key: string]: string }>clz.names();
+        let types = <{ [key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
             this[name] = map[name];
         }));
     }
 
-    toMap(): {[key: string]: string} {
-        const map : {[key: string]: string} = {};
+    toMap(): { [key: string]: string } {
+        const map: { [key: string]: string } = {};
         let clz = <any>this.constructor;
-        let names = <{[key: string]: string }>clz.names();
-        let types = <{[key: string]: any }>clz.types();
+        let names = <{ [key: string]: string }>clz.names();
+        let types = <{ [key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
             const originName = names[name];
             map[originName] = this[name];
@@ -113,10 +121,11 @@ export function cast<T>(obj: any, t: T): T {
     if (typeof obj !== 'object') {
         throw new Error('can not cast to Map');
     }
-    let map = obj as {[key: string]: any};
+
+    let map = obj as { [key: string]: any };
     let clz = t.constructor as any;
-    let names: {[key: string]: string} = clz.names;
-    let types: {[key: string]: any} = clz.types;
+    let names: { [key: string]: string } = clz.names();
+    let types: { [key: string]: any } = clz.types();
     Object.keys(names).forEach((key) => {
         let originName = names[key];
         let type = types[key];
@@ -129,7 +138,7 @@ export function cast<T>(obj: any, t: T): T {
             if (!Array.isArray(map[originName])) {
                 throw new Error(`type of ${key} is mismatch, expect array, but ${typeof map[originName]}`);
             }
-            (<any>t)[key] = map[originName].map((d : any) => {
+            (<any>t)[key] = map[originName].map((d: any) => {
                 return cast(d, new type.itemType({}));
             });
         } else {
@@ -140,6 +149,126 @@ export function cast<T>(obj: any, t: T): T {
     return t;
 }
 
-export function toMap(obj: any): {[key: string]: any} {
+export function toMap(obj: any): { [key: string]: any } {
     return obj.toMap();
+}
+
+export function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
+export function allowRetry(retry: { [key: string]: any }, retryTimes: number, startTime: number): boolean {
+    // 还未重试
+    if (retryTimes === 0) {
+        return true;
+    }
+
+    if (retry.retryable !== true) {
+        return false;
+    }
+
+    if (retry.policy === 'never') {
+        return false;
+    }
+
+    if (retry.policy === 'always') {
+        return true;
+    }
+
+    if (retry.policy === 'simple') {
+        return (retryTimes < retry['maxAttempts']);
+    }
+
+    if (retry.policy === 'timeout') {
+        return Date.now() - startTime < retry.timeout;
+    }
+
+    // 默认不重试
+    return false;
+}
+
+export function getBackoffTime(backoff: { [key: string]: any }, retryTimes: number): number {
+    if (retryTimes === 0) {
+        // 首次调用，不使用退避策略
+        return 0;
+    }
+
+    if (backoff.policy === 'no') {
+        // 不退避
+        return 0;
+    }
+
+    if (backoff.policy === 'fixed') {
+        // 固定退避
+        return backoff.period;
+    }
+
+    if (backoff.policy === 'random') {
+        // 随机退避
+        let min = backoff['minPeriod'];
+        let max = backoff['maxPeriod'];
+        return min + (max - min) * Math.random();
+    }
+
+    if (backoff.policy === 'exponential') {
+        // 指数退避
+        let init = backoff.initial;
+        let max = backoff.max;
+        let multiplier = backoff.multiplier;
+        let time = init * Math.pow(1 + multiplier, retryTimes - 1);
+        return Math.min(time, max);
+    }
+
+    if (backoff.policy === 'exponential_random') {
+        // 指数随机退避
+        let init = backoff.initial;
+        let max = backoff.max;
+        let multiplier = backoff.multiplier;
+        let time = init * Math.pow(1 + multiplier, retryTimes - 1);
+        return Math.min(time, max) * (1 + Math.random() * (multiplier - 1));
+    }
+
+    return 0;
+}
+
+class UnretryableError extends Error {
+    data: any
+
+    constructor(message: string) {
+        super(message);
+        this.name = 'UnableRetryError';
+    }
+}
+
+export function newUnretryableError(request: Request): Error {
+    var e = new UnretryableError('');
+    e.data = {
+        lastRequest: request
+    };
+    return e;
+}
+
+class RetryError extends Error {
+    retryable: boolean
+    data: any
+
+    constructor(message: string) {
+        super(message);
+        this.name = 'RetryError';
+    }
+}
+
+export function retryError(request: Request, response: Response): Error {
+    let e = new RetryError('');
+    e.data = {
+        request: request,
+        response: response
+    };
+    return e;
+}
+
+export function isRetryable(err: Error): boolean {
+    return err instanceof RetryError;
 }
