@@ -1,6 +1,6 @@
 'use strict';
 
-import * as $tea from "../";
+import * as $tea from "../src/tea";
 import 'mocha';
 import assert from 'assert';
 

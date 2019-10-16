@@ -85,29 +85,65 @@ export function newError(data: any): Error {
     return new Error(message);
 }
 
+function getValue(type: any, value: any): any {
+    if (typeof type === 'string') {
+        // basic type
+        return value;
+    }
+    if (type.type === 'array') {
+        if (!Array.isArray(value)) {
+            throw new Error(`expect: array, actual: ${typeof value}`);
+        }
+        return value.map((item: any) => {
+            return getValue(type.itemType, item);
+        });
+    }
+    return new type(value);
+}
+
+function toMap(value: any): any {
+    if (value instanceof Model) {
+        return value.toMap();
+    }
+
+    if (Array.isArray(value)) {
+        return value.map((item) => {
+            return toMap(item);
+        })
+    }
+
+    return value;
+}
+
 export class Model {
     [key: string]: any
 
-    constructor(map?: { [key: string]: string }) {
+    constructor(map?: { [key: string]: any }) {
         if (map == null) {
             return;
         }
+
         let clz = <any>this.constructor;
         let names = <{ [key: string]: string }>clz.names();
         let types = <{ [key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
-            this[name] = map[name];
+            let value = map[name];
+            if (value === undefined || value === null) {
+                return;
+            }
+            let type = types[name];
+            this[name] = getValue(type, value);
         }));
     }
 
-    toMap(): { [key: string]: string } {
-        const map: { [key: string]: string } = {};
+    toMap(): { [key: string]: any } {
+        const map: { [key: string]: any } = {};
         let clz = <any>this.constructor;
         let names = <{ [key: string]: string }>clz.names();
-        let types = <{ [key: string]: any }>clz.types();
         Object.keys(names).forEach((name => {
             const originName = names[name];
-            map[originName] = this[name];
+            const value = this[name];
+            map[originName] = toMap(value);
         }));
         return map;
     }
@@ -128,17 +164,22 @@ export function cast<T>(obj: any, t: T): T {
     let types: { [key: string]: any } = clz.types();
     Object.keys(names).forEach((key) => {
         let originName = names[key];
+        let value = map[originName];
         let type = types[key];
+        if (typeof value === 'undefined' || value == null) {
+            return;
+        }
+
         if (typeof type === 'string') {
-            if (typeof map[originName] !== type) {
-                throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof map[originName]}`);
+            if (typeof value !== type) {
+                throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
             }
-            (<any>t)[key] = map[originName];
+            (<any>t)[key] = value;
         } else if (type.type === 'array') {
-            if (!Array.isArray(map[originName])) {
-                throw new Error(`type of ${key} is mismatch, expect array, but ${typeof map[originName]}`);
+            if (!Array.isArray(value)) {
+                throw new Error(`type of ${key} is mismatch, expect array, but ${typeof value}`);
             }
-            (<any>t)[key] = map[originName].map((d: any) => {
+            (<any>t)[key] = value.map((d: any) => {
                 return cast(d, new type.itemType({}));
             });
         } else {
@@ -147,10 +188,6 @@ export function cast<T>(obj: any, t: T): T {
     });
 
     return t;
-}
-
-export function toMap(obj: any): { [key: string]: any } {
-    return obj.toMap();
 }
 
 export function sleep(ms: number): Promise<void> {
