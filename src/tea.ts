@@ -13,6 +13,11 @@ export class Request {
     query: Dict;
     headers: Dict;
     body: string;
+
+    constructor() {
+        this.headers = {};
+        this.query = {};
+    }
 }
 
 export class Response {
@@ -57,7 +62,7 @@ function buildURL(request: Request) {
 
 export async function doAction(request: Request, runtime: { [key: string]: any } = null): Promise<Response> {
     let url = buildURL(request);
-    let method = request.method.toUpperCase();
+    let method = (request.method || 'GET').toUpperCase();
     let options: httpx.Options = {
         method: method,
         headers: request.headers
@@ -67,12 +72,14 @@ export async function doAction(request: Request, runtime: { [key: string]: any }
         options.data = request.body;
     }
 
-    if (typeof runtime.timeout !== 'undefined') {
-        options.timeout = Number(runtime.timeout);
-    }
+    if (runtime) {
+        if (typeof runtime.timeout !== 'undefined') {
+            options.timeout = Number(runtime.timeout);
+        }
 
-    if (typeof runtime.ignoreSSL !== 'undefined') {
-        options.rejectUnauthorized = !!runtime.ignoreSSL;
+        if (typeof runtime.ignoreSSL !== 'undefined') {
+            options.rejectUnauthorized = !!runtime.ignoreSSL;
+        }
     }
 
     let response = await httpx.request(url, options);
@@ -252,19 +259,19 @@ export function getBackoffTime(backoff: { [key: string]: any }, retryTimes: numb
     if (backoff.policy === 'exponential') {
         // 指数退避
         let init = backoff.initial;
-        let max = backoff.max;
         let multiplier = backoff.multiplier;
         let time = init * Math.pow(1 + multiplier, retryTimes - 1);
+        let max = backoff.max;
         return Math.min(time, max);
     }
 
     if (backoff.policy === 'exponential_random') {
         // 指数随机退避
         let init = backoff.initial;
-        let max = backoff.max;
         let multiplier = backoff.multiplier;
         let time = init * Math.pow(1 + multiplier, retryTimes - 1);
-        return Math.min(time, max) * (1 + Math.random() * (multiplier - 1));
+        let max = backoff.max;
+        return Math.min(time * (0.5 + Math.random()), max);
     }
 
     return 0;
@@ -275,7 +282,7 @@ class UnretryableError extends Error {
 
     constructor(message: string) {
         super(message);
-        this.name = 'UnableRetryError';
+        this.name = 'UnretryableError';
     }
 }
 
