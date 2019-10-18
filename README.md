@@ -2,7 +2,7 @@
 
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
-[![Coverage Status](https://coveralls.io/repos/aliyun/tea-typescript/badge.svg?branch=master&service=github)](https://coveralls.io/github/aliyun/tea-typescript?branch=master)
+[![codecov][cov-image]][cov-url]
 [![David deps][david-image]][david-url]
 [![npm download][download-image]][download-url]
 
@@ -10,6 +10,8 @@
 [npm-url]: https://npmjs.org/package/@alicloud/tea-typescript
 [travis-image]: https://img.shields.io/travis/aliyun/tea-typescript.svg?style=flat-square
 [travis-url]: https://travis-ci.org/aliyun/tea-typescript
+[cov-image]: https://codecov.io/gh/aliyun/tea-typescript/branch/master/graph/badge.svg
+[cov-url]: https://codecov.io/gh/aliyun/tea-typescript
 [david-image]: https://img.shields.io/david/aliyun/tea-typescript.svg?style=flat-square
 [david-url]: https://david-dm.org/aliyun/tea-typescript
 [download-image]: https://img.shields.io/npm/dm/@alicloud/tea-typescript.svg?style=flat-square
