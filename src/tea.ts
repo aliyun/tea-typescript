@@ -1,9 +1,28 @@
 import * as querystring from 'querystring';
 import { IncomingMessage, IncomingHttpHeaders } from 'http';
+import { Readable } from 'stream';
 
 import * as httpx from 'httpx';
 
 type Dict = { [key: string]: string };
+
+export class BytesReadable extends Readable {
+    value: Buffer
+
+    constructor(value: string | Buffer) {
+        super();
+        if (typeof value === 'string') {
+            this.value = Buffer.from(value);
+        } else if (Buffer.isBuffer(value)) {
+            this.value = value;
+        }
+    }
+
+    _read() {
+        this.push(this.value);
+        this.push(null);
+    }
+}
 
 export class Request {
     protocol: string;
@@ -12,7 +31,7 @@ export class Request {
     pathname: string;
     query: Dict;
     headers: Dict;
-    body: string;
+    body: Readable;
 
     constructor() {
         this.headers = {};

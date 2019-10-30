@@ -4,8 +4,9 @@ import http from 'http';
 import url from 'url';
 import * as $tea from "../src/tea";
 import 'mocha';
-import assert from 'assert';
+import assert, { rejects } from 'assert';
 import { AddressInfo } from 'net';
+import { Readable } from 'stream';
 
 const server = http.createServer((req, res) => {
     const urlObj = url.parse(req.url, true);
@@ -22,6 +23,18 @@ const server = http.createServer((req, res) => {
         res.end('Hello world!');
     }
 });
+
+function read(readable: Readable): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+        let buffers : Buffer[] = [];
+        readable.on('data', function (chunk) {
+            buffers.push(chunk);
+        });
+        readable.on('end', function () {
+            resolve(Buffer.concat(buffers));
+        });
+    });
+}
 
 describe('$tea', function () {
 
@@ -190,7 +203,19 @@ describe('$tea', function () {
     it("retryError should ok", function () {
         let err = $tea.retryError(new $tea.Request(), null);
         assert.strictEqual(err.name, "RetryError");
-    })
+    });
+
+    it("readable with string should ok", async function () {
+        let readable = new $tea.BytesReadable('string');
+        const buffer = await read(readable);
+        assert.strictEqual(buffer.toString(), 'string');
+    });
+
+    it("readable with buffer should ok", async function () {
+        let readable = new $tea.BytesReadable(Buffer.from('string'));
+        const buffer = await read(readable);
+        assert.strictEqual(buffer.toString(), 'string');
+    });
 
     it("isRetryable should ok", function () {
         assert.strictEqual($tea.isRetryable(new Error('')), false);
