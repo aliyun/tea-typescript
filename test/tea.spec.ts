@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
 
 function read(readable: Readable): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-        let buffers : Buffer[] = [];
+        let buffers: Buffer[] = [];
         readable.on('data', function (chunk) {
             buffers.push(chunk);
         });
@@ -61,26 +61,44 @@ describe('$tea', function () {
                     phone: '',
                     role: 'user',
                     status: 'enabled',
+                    titles: ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
                     user_name: '朴灵',
                     description: '',
                     default_drive_id: ''
                 },
                 {
                     domain_id: 'sz16',
-                    user_id: 'superadmin',
+                    user_id: 'DING-aefgfel',
                     avatar: '',
-                    created_at: 1568732914502,
+                    created_at: 1568732914442,
                     updated_at: 0,
                     email: '',
-                    nick_name: 'superadmin',
+                    nick_name: '普冬',
                     phone: '',
-                    role: 'superadmin',
+                    role: 'user',
                     status: 'enabled',
-                    user_name: 'superadmin',
+                    titles: ['高级开发工程师'],
+                    user_name: '普冬',
                     description: '',
                     default_drive_id: ''
                 }
             ],
+            superadmin: {
+                domain_id: 'sz16',
+                user_id: 'superadmin',
+                avatar: '',
+                created_at: 1568732914502,
+                updated_at: 0,
+                email: '',
+                nick_name: 'superadmin',
+                phone: '',
+                role: 'superadmin',
+                status: 'enabled',
+                titles: ['superadmin'],
+                user_name: 'superadmin',
+                description: '',
+                default_drive_id: ''
+            },
             next_marker: 'next marker'
         };
 
@@ -95,6 +113,7 @@ describe('$tea', function () {
             phone?: string
             role?: string
             status?: string
+            titles?: string
             updatedAt?: number
             userId?: string
             userName?: string
@@ -110,6 +129,7 @@ describe('$tea', function () {
                     phone: 'phone',
                     role: 'role',
                     status: 'status',
+                    titles: 'titles',
                     updatedAt: 'updated_at',
                     userId: 'user_id',
                     userName: 'user_name',
@@ -128,6 +148,7 @@ describe('$tea', function () {
                     phone: 'string',
                     role: 'string',
                     status: 'string',
+                    titles: { type: 'array', itemType: 'string' },
                     updatedAt: 'number',
                     userId: 'string',
                     userName: 'string',
@@ -141,10 +162,12 @@ describe('$tea', function () {
 
         class ListUserResponse extends $tea.Model {
             items?: BaseUserResponse[]
+            superadmin?: BaseUserResponse
             nextMarker?: string
             static names(): { [key: string]: string } {
                 return {
                     items: 'items',
+                    superadmin: 'superadmin',
                     nextMarker: 'next_marker',
                 };
             }
@@ -152,6 +175,7 @@ describe('$tea', function () {
             static types(): { [key: string]: any } {
                 return {
                     items: { 'type': 'array', 'itemType': BaseUserResponse },
+                    superadmin: BaseUserResponse,
                     nextMarker: 'string',
                 };
             }
@@ -176,26 +200,44 @@ describe('$tea', function () {
                     "phone": "",
                     "role": "user",
                     "status": "enabled",
+                    "titles": ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
                     "updatedAt": 1568773418121,
                     "userId": "DING-EthqiPlOSS6giE",
                     "userName": "朴灵",
                 }),
                 new BaseUserResponse({
                     "avatar": "",
-                    "createdAt": 1568732914502,
+                    "createdAt": 1568732914442,
                     "defaultDriveId": "",
                     "description": "",
                     "domainId": "sz16",
                     "email": "",
-                    "nickName": "superadmin",
+                    "nickName": "普冬",
                     "phone": "",
-                    "role": "superadmin",
+                    "role": "user",
                     "status": "enabled",
+                    "titles": ['高级开发工程师'],
                     "updatedAt": 0,
-                    "userId": "superadmin",
-                    "userName": "superadmin"
+                    "userId": "DING-aefgfel",
+                    "userName": "普冬"
                 })
             ],
+            "superadmin": new BaseUserResponse({
+                "avatar": "",
+                "createdAt": 1568732914502,
+                "defaultDriveId": "",
+                "description": "",
+                "domainId": "sz16",
+                "email": "",
+                "nickName": "superadmin",
+                "phone": "",
+                "role": "superadmin",
+                "status": "enabled",
+                "titles": ['superadmin'],
+                "updatedAt": 0,
+                "userId": "superadmin",
+                "userName": "superadmin"
+            }),
             "nextMarker": "next marker"
         }));
     });

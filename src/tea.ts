@@ -205,9 +205,19 @@ export function cast<T>(obj: any, t: T): T {
             if (!Array.isArray(value)) {
                 throw new Error(`type of ${key} is mismatch, expect array, but ${typeof value}`);
             }
-            (<any>t)[key] = value.map((d: any) => {
-                return cast(d, new type.itemType({}));
-            });
+            if (typeof type.itemType === 'function') {
+                (<any>t)[key] = value.map((d: any) => {
+                    return cast(d, new type.itemType({}));
+                });
+            } else {
+                (<any>t)[key] = value;
+            }
+
+        } else if (typeof type === 'function') {
+            if (!(value instanceof Object)) {
+                throw new Error(`type of ${key} is mismatch, expect object, but ${typeof value}`);
+            }
+            (<any>t)[key] = cast(value, new type({}));
         } else {
 
         }
