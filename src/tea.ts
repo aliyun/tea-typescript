@@ -1,8 +1,8 @@
 import * as querystring from 'querystring';
 import { IncomingMessage, IncomingHttpHeaders } from 'http';
 import { Readable } from 'stream';
-
 import * as httpx from 'httpx';
+import { parse } from 'url';
 
 type Dict = { [key: string]: string };
 
@@ -73,10 +73,22 @@ function buildURL(request: Request) {
         url += `:${request.port}`;
     }
     url += `${request.pathname}`;
+    const urlInfo = parse(url);
     if (request.query && Object.keys(request.query).length > 0) {
-        url += `?${querystring.stringify(request.query)}`;
+        if (urlInfo.query) {
+            url += `&${querystring.stringify(request.query)}`;
+        } else {
+            url += `?${querystring.stringify(request.query)}`;
+        }
     }
     return url;
+}
+
+function isModelClass(t: any): boolean {
+    if (!t) {
+        return false;
+    }
+    return typeof t.types === 'function' && typeof t.names === 'function';
 }
 
 export async function doAction(request: Request, runtime: { [key: string]: any } = null): Promise<Response> {
@@ -197,7 +209,7 @@ export function cast<T>(obj: any, t: T): T {
         }
 
         if (typeof type === 'string') {
-            if (typeof value !== type) {
+            if (type !== 'Readable' && type !== 'map' && typeof value !== type) {
                 throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
             }
             (<any>t)[key] = value;
@@ -207,7 +219,10 @@ export function cast<T>(obj: any, t: T): T {
             }
             if (typeof type.itemType === 'function') {
                 (<any>t)[key] = value.map((d: any) => {
-                    return cast(d, new type.itemType({}));
+                    if (isModelClass(type.itemType)) {
+                        return cast(d, new type.itemType({}));
+                    }
+                    return d;
                 });
             } else {
                 (<any>t)[key] = value;
@@ -217,7 +232,11 @@ export function cast<T>(obj: any, t: T): T {
             if (!(value instanceof Object)) {
                 throw new Error(`type of ${key} is mismatch, expect object, but ${typeof value}`);
             }
-            (<any>t)[key] = cast(value, new type({}));
+            if (isModelClass(type)) {
+                (<any>t)[key] = cast(value, new type({}));
+                return;
+            }
+            (<any>t)[key] = key;
         } else {
 
         }
