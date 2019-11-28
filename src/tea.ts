@@ -136,10 +136,19 @@ function getValue(type: any, value: any): any {
             return getValue(type.itemType, item);
         });
     }
-    return new type(value);
+    if (typeof type === 'function') {
+        if (isModelClass(type)) {
+            return new type(value);
+        }
+        return value;
+    }
+    return value;
 }
 
-function toMap(value: any): any {
+export function toMap(value: any = undefined): any {
+    if (typeof value === 'undefined' || value == null) {
+        return {};
+    }
     if (value instanceof Model) {
         return value.toMap();
     }
@@ -181,6 +190,9 @@ export class Model {
         Object.keys(names).forEach((name => {
             const originName = names[name];
             const value = this[name];
+            if (typeof value === 'undefined' || value == null) {
+                return;
+            }
             map[originName] = toMap(value);
         }));
         return map;
@@ -236,7 +248,7 @@ export function cast<T>(obj: any, t: T): T {
                 (<any>t)[key] = cast(value, new type({}));
                 return;
             }
-            (<any>t)[key] = key;
+            (<any>t)[key] = value;
         } else {
 
         }
