@@ -48,6 +48,24 @@ describe('$tea', function () {
     });
 
     it('cast should ok', async function () {
+        class ListInfo {
+            length: number
+            constructor(length: number) {
+                this.length = length;
+            }
+        }
+        class TypeInfo {
+            type: string
+            constructor(type: string) {
+                this.type = type;
+            }
+        }
+        const testStream = new Readable();
+        const meta: { [key: string]: string } = {
+            "habits": "dota"
+        };
+        const listInfo = new ListInfo(2);
+        const typeList = [new TypeInfo('user'), new TypeInfo('admin')];
         let data = {
             items: [
                 {
@@ -64,7 +82,8 @@ describe('$tea', function () {
                     titles: ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
                     user_name: '朴灵',
                     description: '',
-                    default_drive_id: ''
+                    default_drive_id: '',
+                    meta
                 },
                 {
                     domain_id: 'sz16',
@@ -80,7 +99,8 @@ describe('$tea', function () {
                     titles: ['高级开发工程师'],
                     user_name: '普冬',
                     description: '',
-                    default_drive_id: ''
+                    default_drive_id: '',
+                    meta: undefined
                 }
             ],
             superadmin: {
@@ -97,8 +117,12 @@ describe('$tea', function () {
                 titles: ['superadmin'],
                 user_name: 'superadmin',
                 description: '',
-                default_drive_id: ''
+                default_drive_id: '',
+                meta
             },
+            stream: testStream,
+            list_info: listInfo,
+            type_list: typeList,
             next_marker: 'next marker'
         };
 
@@ -133,6 +157,7 @@ describe('$tea', function () {
                     updatedAt: 'updated_at',
                     userId: 'user_id',
                     userName: 'user_name',
+                    meta: 'meta'
                 };
             }
 
@@ -152,6 +177,7 @@ describe('$tea', function () {
                     updatedAt: 'number',
                     userId: 'string',
                     userName: 'string',
+                    meta: 'map'
                 };
             }
 
@@ -160,15 +186,23 @@ describe('$tea', function () {
             }
         }
 
+
+
         class ListUserResponse extends $tea.Model {
             items?: BaseUserResponse[]
             superadmin?: BaseUserResponse
+            stream?: Readable
             nextMarker?: string
+            listInfo?: ListInfo
+            typeList?: TypeInfo
             static names(): { [key: string]: string } {
                 return {
                     items: 'items',
                     superadmin: 'superadmin',
+                    stream: 'stream',
                     nextMarker: 'next_marker',
+                    listInfo: 'list_info',
+                    typeList: 'type_list',
                 };
             }
 
@@ -176,7 +210,10 @@ describe('$tea', function () {
                 return {
                     items: { 'type': 'array', 'itemType': BaseUserResponse },
                     superadmin: BaseUserResponse,
+                    stream: 'Readable',
                     nextMarker: 'string',
+                    listInfo: ListInfo,
+                    typeList: { 'type': 'array', 'itemType': TypeInfo },
                 };
             }
 
@@ -186,7 +223,6 @@ describe('$tea', function () {
         }
 
         let response = $tea.cast(data, new ListUserResponse({}));
-
         assert.deepStrictEqual(response, new ListUserResponse({
             items: [
                 new BaseUserResponse({
@@ -204,6 +240,7 @@ describe('$tea', function () {
                     "updatedAt": 1568773418121,
                     "userId": "DING-EthqiPlOSS6giE",
                     "userName": "朴灵",
+                    "meta": meta
                 }),
                 new BaseUserResponse({
                     "avatar": "",
@@ -219,7 +256,8 @@ describe('$tea', function () {
                     "titles": ['高级开发工程师'],
                     "updatedAt": 0,
                     "userId": "DING-aefgfel",
-                    "userName": "普冬"
+                    "userName": "普冬",
+                    "meta": undefined
                 })
             ],
             "superadmin": new BaseUserResponse({
@@ -236,10 +274,94 @@ describe('$tea', function () {
                 "titles": ['superadmin'],
                 "updatedAt": 0,
                 "userId": "superadmin",
-                "userName": "superadmin"
+                "userName": "superadmin",
+                "meta": meta
             }),
+            "stream": testStream,
+            "listInfo": listInfo,
+            "typeList": typeList,
             "nextMarker": "next marker"
         }));
+    });
+
+    it('cast wrong type should error', async function () {
+        class MetaInfo {
+            meta: string
+            constructor(meta: string) {
+                this.meta = meta;
+            }
+        }
+        class UserInfoResponse extends $tea.Model {
+            name: string
+            title: string[]
+            metaInfo: MetaInfo
+            static names(): { [key: string]: string } {
+                return {
+                    name: 'name',
+                    title: 'title',
+                    metaInfo: 'metaInfo',
+                };
+            }
+
+            static types(): { [key: string]: any } {
+                return {
+                    title: { 'type': 'array', 'itemType': 'string' },
+                    name: 'string',
+                    metaInfo: MetaInfo
+                };
+            }
+
+            constructor(map: { [key: string]: any }) {
+                super(map);
+            }
+        }
+
+        try {
+            let data;
+            $tea.cast(data, new UserInfoResponse({}))
+        } catch (err) {
+            assert.strictEqual(err.message, 'can not cast to Map')
+        }
+
+        try {
+            const data = 'data'
+            $tea.cast(data, new UserInfoResponse({}))
+        } catch (err) {
+            assert.strictEqual(err.message, 'can not cast to Map')
+        }
+
+        try {
+            const data = {
+                name: 123,
+                title: ['高级开发工程师'],
+                metaInfo: new MetaInfo('开放平台')
+            }
+            $tea.cast(data, new UserInfoResponse({}))
+        } catch (err) {
+            assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number')
+        }
+
+        try {
+            const data = {
+                name: '普冬',
+                title: '高级开发工程师',
+                metaInfo: new MetaInfo('开放平台')
+            }
+            $tea.cast(data, new UserInfoResponse({}))
+        } catch (err) {
+            assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string')
+        }
+
+        try {
+            const data = {
+                name: '普冬',
+                title: ['高级开发工程师'],
+                metaInfo: '开放平台'
+            }
+            $tea.cast(data, new UserInfoResponse({}))
+        } catch (err) {
+            assert.strictEqual(err.message, 'type of metaInfo is mismatch, expect object, but string')
+        }
     });
 
     it("retryError should ok", function () {
@@ -414,29 +536,41 @@ describe('$tea', function () {
     });
 
     it("new Model should ok", function () {
-        class MyModel extends $tea.Model {
-            avatar?: string
+        class SubModel extends $tea.Model {
+            status?: number
             static names(): { [key: string]: string } {
                 return {
-                    avatar: 'avatar',
-                    createdAt: 'created_at',
-                    defaultDriveId: 'default_drive_id',
-                    description: 'description',
-                    domainId: 'domain_id',
-                    email: 'email',
-                    nickName: 'nick_name',
-                    phone: 'phone',
-                    role: 'role',
                     status: 'status',
-                    updatedAt: 'updated_at',
-                    userId: 'user_id',
-                    userName: 'user_name',
                 };
             }
 
             static types(): { [key: string]: any } {
                 return {
-                    avatar: 'string'
+                    status: 'number'
+                };
+            }
+
+            constructor(map: { [key: string]: any }) {
+                super(map);
+            }
+        }
+        class MyModel extends $tea.Model {
+            avatar?: string
+            role?: string[]
+            status: SubModel
+            static names(): { [key: string]: string } {
+                return {
+                    avatar: 'avatar',
+                    status: 'status',
+                    role: 'role',
+                };
+            }
+
+            static types(): { [key: string]: any } {
+                return {
+                    avatar: 'string',
+                    status: SubModel,
+                    role: { type: 'array', itemType: 'string' }
                 };
             }
 
@@ -447,11 +581,59 @@ describe('$tea', function () {
 
         let m = new MyModel(null);
         assert.strictEqual(m.avatar, undefined);
-        assert.strictEqual(m.toMap()["avatar"], undefined);
+        assert.strictEqual($tea.toMap(m)["avatar"], undefined);
+        assert.strictEqual($tea.toMap()["avatar"], undefined);
+        assert.strictEqual($tea.toMap(undefined)["avatar"], undefined);
+        assert.strictEqual($tea.toMap(null)["avatar"], undefined);
 
         m = new MyModel({ avatar: "avatar url" });
         assert.strictEqual(m.avatar, "avatar url");
-        assert.strictEqual(m.toMap()["avatar"], "avatar url");
+        assert.strictEqual($tea.toMap(m)["avatar"], "avatar url");
+
+        m = new MyModel({
+            avatar: "avatar url",
+            role: ['admin', 'user'],
+        });
+        assert.strictEqual($tea.toMap(m)["role"][0], 'admin');
+        assert.strictEqual($tea.toMap(m)["role"][1], 'user');
+
+        m = new MyModel({
+            status: new SubModel({ status: 1 })
+        });
+        assert.strictEqual($tea.toMap(m)["status"]["status"], 1);
+    });
+
+    it("new Model with wrong type should error", function () {
+        class MyModel extends $tea.Model {
+            avatar?: string
+            role?: string[]
+            static names(): { [key: string]: string } {
+                return {
+                    avatar: 'avatar',
+                    role: 'role',
+                };
+            }
+
+            static types(): { [key: string]: any } {
+                return {
+                    avatar: 'string',
+                    role: { type: 'array', itemType: 'string' }
+                };
+            }
+
+            constructor(map: { [key: string]: any }) {
+                super(map);
+            }
+        }
+        try {
+            let m = new MyModel({
+                avatar: "avatar url",
+                role: 'admin',
+            });
+        } catch (err) {
+            assert.strictEqual(err.message, 'expect: array, actual: string')
+        }
+
     });
 
     it("sleep should ok", async function () {
@@ -473,7 +655,32 @@ describe('$tea', function () {
         request.pathname = '/';
         request.port = (server.address() as AddressInfo).port;
         request.headers['host'] = '127.0.0.1';
-        let res = await $tea.doAction(request);
+        request.query = { id: '1' };
+        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
+        assert.strictEqual(res.statusCode, 200);
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('doAction when path with query should ok', async function () {
+        let request = new $tea.Request();
+        request.pathname = '/?name';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        request.query = { id: '1' };
+        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
+        assert.strictEqual(res.statusCode, 200);
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('doAction with post method should ok', async function () {
+        let request = new $tea.Request();
+        request.method = 'POST';
+        request.pathname = '/';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
