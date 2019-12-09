@@ -377,3 +377,31 @@ export function retryError(request: Request, response: Response): Error {
 export function isRetryable(err: Error): boolean {
     return err instanceof RetryError;
 }
+
+export async function run<T>(_runtime: TeaObject, callback: (context: TeaObject, runtime: TeaObject) => Promise<T>) {
+    let _ctx: TeaObject = {
+        'lastRequest': null
+    };
+    let _now = Date.now();
+    let _retryTimes = 0;
+    while (allowRetry(_runtime['retry'], _retryTimes, _now)) {
+      if (_retryTimes > 0) {
+        let _backoffTime = getBackoffTime(_runtime['backoff'], _retryTimes);
+        if (_backoffTime > 0) {
+          await sleep(_backoffTime);
+        }
+      }
+
+      _retryTimes = _retryTimes + 1;
+      try {
+        return await callback(_ctx, _runtime);
+      } catch (ex) {
+        if (isRetryable(ex)) {
+          continue;
+        }
+        throw ex;
+      }
+    }
+
+    throw newUnretryableError(_ctx.lastRequest);
+}
