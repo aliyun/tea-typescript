@@ -4,7 +4,8 @@ import { Readable } from 'stream';
 import * as httpx from 'httpx';
 import { parse } from 'url';
 
-type Dict = { [key: string]: string };
+type TeaDict = { [key: string]: string };
+type TeaObject = { [key: string]: any };
 
 export class BytesReadable extends Readable {
     value: Buffer
@@ -29,8 +30,8 @@ export class Request {
     port: number;
     method: string;
     pathname: string;
-    query: Dict;
-    headers: Dict;
+    query: TeaDict;
+    headers: TeaDict;
     body: Readable;
 
     constructor() {
@@ -42,7 +43,7 @@ export class Request {
 export class Response {
     statusCode: number;
     statusMessage: string;
-    headers: { [key: string]: string };
+    headers: TeaDict;
     _response: IncomingMessage;
     constructor(res: IncomingMessage) {
         this.statusCode = res.statusCode;
@@ -51,8 +52,8 @@ export class Response {
         this._response = res;
     }
 
-    convertHeaders(headers: IncomingHttpHeaders): Dict {
-        let results: Dict = {};
+    convertHeaders(headers: IncomingHttpHeaders): TeaDict {
+        let results: TeaDict = {};
         const keys = Object.keys(headers);
         for (let index = 0; index < keys.length; index++) {
             const key = keys[index];
@@ -91,7 +92,7 @@ function isModelClass(t: any): boolean {
     return typeof t.types === 'function' && typeof t.names === 'function';
 }
 
-export async function doAction(request: Request, runtime: { [key: string]: any } = null): Promise<Response> {
+export async function doAction(request: Request, runtime: TeaObject = null): Promise<Response> {
     let url = buildURL(request);
     let method = (request.method || 'GET').toUpperCase();
     let options: httpx.Options = {
@@ -165,14 +166,14 @@ export function toMap(value: any = undefined): any {
 export class Model {
     [key: string]: any
 
-    constructor(map?: { [key: string]: any }) {
+    constructor(map?: TeaObject) {
         if (map == null) {
             return;
         }
 
         let clz = <any>this.constructor;
-        let names = <{ [key: string]: string }>clz.names();
-        let types = <{ [key: string]: any }>clz.types();
+        let names = <TeaDict>clz.names();
+        let types = <TeaObject>clz.types();
         Object.keys(names).forEach((name => {
             let value = map[name];
             if (value === undefined || value === null) {
@@ -183,10 +184,10 @@ export class Model {
         }));
     }
 
-    toMap(): { [key: string]: any } {
-        const map: { [key: string]: any } = {};
+    toMap(): TeaObject {
+        const map: TeaObject = {};
         let clz = <any>this.constructor;
-        let names = <{ [key: string]: string }>clz.names();
+        let names = <TeaDict>clz.names();
         Object.keys(names).forEach((name => {
             const originName = names[name];
             const value = this[name];
@@ -208,10 +209,10 @@ export function cast<T>(obj: any, t: T): T {
         throw new Error('can not cast to Map');
     }
 
-    let map = obj as { [key: string]: any };
+    let map = obj as TeaObject;
     let clz = t.constructor as any;
-    let names: { [key: string]: string } = clz.names();
-    let types: { [key: string]: any } = clz.types();
+    let names: TeaDict = clz.names();
+    let types: TeaObject = clz.types();
     Object.keys(names).forEach((key) => {
         let originName = names[key];
         let value = map[originName];
@@ -263,7 +264,7 @@ export function sleep(ms: number): Promise<void> {
     });
 }
 
-export function allowRetry(retry: { [key: string]: any }, retryTimes: number, startTime: number): boolean {
+export function allowRetry(retry: TeaObject, retryTimes: number, startTime: number): boolean {
     // 还未重试
     if (retryTimes === 0) {
         return true;
@@ -293,7 +294,7 @@ export function allowRetry(retry: { [key: string]: any }, retryTimes: number, st
     return false;
 }
 
-export function getBackoffTime(backoff: { [key: string]: any }, retryTimes: number): number {
+export function getBackoffTime(backoff: TeaObject, retryTimes: number): number {
     if (retryTimes === 0) {
         // 首次调用，不使用退避策略
         return 0;
