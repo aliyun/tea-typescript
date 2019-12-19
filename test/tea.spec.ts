@@ -2,11 +2,12 @@
 
 import http from 'http';
 import url from 'url';
-import * as $tea from "../src/tea";
 import 'mocha';
-import assert, { rejects } from 'assert';
+import assert from 'assert';
 import { AddressInfo } from 'net';
 import { Readable } from 'stream';
+
+import * as $tea from "../src/tea";
 
 const server = http.createServer((req, res) => {
     const urlObj = url.parse(req.url, true);
@@ -316,52 +317,55 @@ describe('$tea', function () {
             }
         }
 
-        try {
-            let data;
-            $tea.cast(data, new UserInfoResponse({}))
-        } catch (err) {
-            assert.strictEqual(err.message, 'can not cast to Map')
-        }
+        assert.throws(function () {
+            $tea.cast(undefined, new UserInfoResponse({}))
+        }, function (err: Error) {
+            assert.strictEqual(err.message, 'can not cast to Map');
+            return true;
+        });
 
-        try {
-            const data = 'data'
-            $tea.cast(data, new UserInfoResponse({}))
-        } catch (err) {
-            assert.strictEqual(err.message, 'can not cast to Map')
-        }
+        assert.throws(function () {
+            $tea.cast('data', new UserInfoResponse({}));
+        }, function (err: Error) {
+            assert.strictEqual(err.message, 'can not cast to Map');
+            return true;
+        });
 
-        try {
+        assert.throws(function () {
             const data = {
                 name: 123,
                 title: ['高级开发工程师'],
                 metaInfo: new MetaInfo('开放平台')
             }
             $tea.cast(data, new UserInfoResponse({}))
-        } catch (err) {
-            assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number')
-        }
+        }, function (err: Error) {
+            assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number');
+            return true;
+        });
 
-        try {
+        assert.throws(function () {
             const data = {
                 name: '普冬',
                 title: '高级开发工程师',
                 metaInfo: new MetaInfo('开放平台')
             }
-            $tea.cast(data, new UserInfoResponse({}))
-        } catch (err) {
-            assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string')
-        }
+            $tea.cast(data, new UserInfoResponse({}));
+        }, function (err: Error) {
+            assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string');
+            return true;
+        });
 
-        try {
+        assert.throws(function () {
             const data = {
                 name: '普冬',
                 title: ['高级开发工程师'],
                 metaInfo: '开放平台'
             }
             $tea.cast(data, new UserInfoResponse({}))
-        } catch (err) {
+        }, function (err: Error) {
             assert.strictEqual(err.message, 'type of metaInfo is mismatch, expect object, but string')
-        }
+            return true;
+        });
     });
 
     it("retryError should ok", function () {
@@ -625,15 +629,15 @@ describe('$tea', function () {
                 super(map);
             }
         }
-        try {
+        assert.throws(function () {
             let m = new MyModel({
                 avatar: "avatar url",
                 role: 'admin',
             });
-        } catch (err) {
-            assert.strictEqual(err.message, 'expect: array, actual: string')
-        }
-
+        }, function (err: Error) {
+            assert.strictEqual(err.message, 'expect: array, actual: string');
+            return true;
+        });
     });
 
     it("sleep should ok", async function () {
