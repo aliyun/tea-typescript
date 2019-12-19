@@ -148,8 +148,9 @@ function getValue(type: any, value: any): any {
 
 export function toMap(value: any = undefined): any {
     if (typeof value === 'undefined' || value == null) {
-        return {};
+        return null;
     }
+
     if (value instanceof Model) {
         return value.toMap();
     }

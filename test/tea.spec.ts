@@ -586,9 +586,9 @@ describe('$tea', function () {
         let m = new MyModel(null);
         assert.strictEqual(m.avatar, undefined);
         assert.strictEqual($tea.toMap(m)["avatar"], undefined);
-        assert.strictEqual($tea.toMap()["avatar"], undefined);
-        assert.strictEqual($tea.toMap(undefined)["avatar"], undefined);
-        assert.strictEqual($tea.toMap(null)["avatar"], undefined);
+        assert.strictEqual($tea.toMap(), null);
+        assert.strictEqual($tea.toMap(undefined), null);
+        assert.strictEqual($tea.toMap(null), null);
 
         m = new MyModel({ avatar: "avatar url" });
         assert.strictEqual(m.avatar, "avatar url");
