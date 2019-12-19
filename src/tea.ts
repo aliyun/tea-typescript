@@ -44,12 +44,12 @@ export class Response {
     statusCode: number;
     statusMessage: string;
     headers: TeaDict;
-    _response: IncomingMessage;
-    constructor(res: IncomingMessage) {
-        this.statusCode = res.statusCode;
-        this.statusMessage = res.statusMessage;
-        this.headers = this.convertHeaders(res.headers);
-        this._response = res;
+    body: IncomingMessage;
+    constructor(httpResponse: IncomingMessage) {
+        this.statusCode = httpResponse.statusCode;
+        this.statusMessage = httpResponse.statusMessage;
+        this.headers = this.convertHeaders(httpResponse.headers);
+        this.body = httpResponse;
     }
 
     convertHeaders(headers: IncomingHttpHeaders): TeaDict {
@@ -63,7 +63,7 @@ export class Response {
     }
 
     async readBytes(): Promise<Buffer> {
-        let buff = await httpx.read(this._response, '');
+        let buff = await httpx.read(this.body, '');
         return <Buffer>buff;
     }
 }
