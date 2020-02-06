@@ -48,323 +48,351 @@ describe('$tea', function () {
         server.close(done);
     });
 
-    it('cast should ok', async function () {
-        class ListInfo {
-            length: number
-            constructor(length: number) {
-                this.length = length;
+    describe('cast', function() {
+
+        it('cast should ok', function () {
+            class ListInfo {
+                length: number
+                constructor(length: number) {
+                    this.length = length;
+                }
             }
-        }
-        class TypeInfo {
-            type: string
-            constructor(type: string) {
-                this.type = type;
+            class TypeInfo {
+                type: string
+                constructor(type: string) {
+                    this.type = type;
+                }
             }
-        }
-        const testStream = new Readable();
-        const meta: { [key: string]: string } = {
-            "habits": "dota"
-        };
-        const listInfo = new ListInfo(2);
-        const typeList = [new TypeInfo('user'), new TypeInfo('admin')];
-        let data = {
-            items: [
-                {
+            const testStream = new Readable();
+            const meta: { [key: string]: string } = {
+                "habits": "dota"
+            };
+            const listInfo = new ListInfo(2);
+            const typeList = [new TypeInfo('user'), new TypeInfo('admin')];
+            let data = {
+                items: [
+                    {
+                        domain_id: 'sz16',
+                        user_id: 'DING-EthqiPlOSS6giE',
+                        avatar: '',
+                        created_at: 1568773418121,
+                        updated_at: 1568773418121,
+                        email: '',
+                        nick_name: '朴灵',
+                        phone: '',
+                        role: 'user',
+                        status: 'enabled',
+                        titles: ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
+                        user_name: '朴灵',
+                        description: '',
+                        default_drive_id: '',
+                        meta
+                    },
+                    {
+                        domain_id: 'sz16',
+                        user_id: 'DING-aefgfel',
+                        avatar: '',
+                        created_at: 1568732914442,
+                        updated_at: 0,
+                        email: '',
+                        nick_name: '普冬',
+                        phone: '',
+                        role: 'user',
+                        status: 'enabled',
+                        titles: ['高级开发工程师'],
+                        user_name: '普冬',
+                        description: '',
+                        default_drive_id: '',
+                        meta: undefined
+                    }
+                ],
+                superadmin: {
                     domain_id: 'sz16',
-                    user_id: 'DING-EthqiPlOSS6giE',
+                    user_id: 'superadmin',
                     avatar: '',
-                    created_at: 1568773418121,
-                    updated_at: 1568773418121,
+                    created_at: 1568732914502,
+                    updated_at: 0,
                     email: '',
-                    nick_name: '朴灵',
+                    nick_name: 'superadmin',
                     phone: '',
-                    role: 'user',
+                    role: 'superadmin',
                     status: 'enabled',
-                    titles: ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
-                    user_name: '朴灵',
+                    titles: ['superadmin'],
+                    user_name: 'superadmin',
                     description: '',
                     default_drive_id: '',
                     meta
                 },
-                {
-                    domain_id: 'sz16',
-                    user_id: 'DING-aefgfel',
-                    avatar: '',
-                    created_at: 1568732914442,
-                    updated_at: 0,
-                    email: '',
-                    nick_name: '普冬',
-                    phone: '',
-                    role: 'user',
-                    status: 'enabled',
-                    titles: ['高级开发工程师'],
-                    user_name: '普冬',
-                    description: '',
-                    default_drive_id: '',
-                    meta: undefined
+                stream: testStream,
+                list_info: listInfo,
+                type_list: typeList,
+                next_marker: 'next marker'
+            };
+
+            class BaseUserResponse extends $tea.Model {
+                avatar?: string
+                createdAt?: number
+                defaultDriveId?: string
+                description?: string
+                domainId?: string
+                email?: string
+                nickName?: string
+                phone?: string
+                role?: string
+                status?: string
+                titles?: string
+                updatedAt?: number
+                userId?: string
+                userName?: string
+                static names(): { [key: string]: string } {
+                    return {
+                        avatar: 'avatar',
+                        createdAt: 'created_at',
+                        defaultDriveId: 'default_drive_id',
+                        description: 'description',
+                        domainId: 'domain_id',
+                        email: 'email',
+                        nickName: 'nick_name',
+                        phone: 'phone',
+                        role: 'role',
+                        status: 'status',
+                        titles: 'titles',
+                        updatedAt: 'updated_at',
+                        userId: 'user_id',
+                        userName: 'user_name',
+                        meta: 'meta'
+                    };
                 }
-            ],
-            superadmin: {
-                domain_id: 'sz16',
-                user_id: 'superadmin',
-                avatar: '',
-                created_at: 1568732914502,
-                updated_at: 0,
-                email: '',
-                nick_name: 'superadmin',
-                phone: '',
-                role: 'superadmin',
-                status: 'enabled',
-                titles: ['superadmin'],
-                user_name: 'superadmin',
-                description: '',
-                default_drive_id: '',
-                meta
-            },
-            stream: testStream,
-            list_info: listInfo,
-            type_list: typeList,
-            next_marker: 'next marker'
-        };
 
-        class BaseUserResponse extends $tea.Model {
-            avatar?: string
-            createdAt?: number
-            defaultDriveId?: string
-            description?: string
-            domainId?: string
-            email?: string
-            nickName?: string
-            phone?: string
-            role?: string
-            status?: string
-            titles?: string
-            updatedAt?: number
-            userId?: string
-            userName?: string
-            static names(): { [key: string]: string } {
-                return {
-                    avatar: 'avatar',
-                    createdAt: 'created_at',
-                    defaultDriveId: 'default_drive_id',
-                    description: 'description',
-                    domainId: 'domain_id',
-                    email: 'email',
-                    nickName: 'nick_name',
-                    phone: 'phone',
-                    role: 'role',
-                    status: 'status',
-                    titles: 'titles',
-                    updatedAt: 'updated_at',
-                    userId: 'user_id',
-                    userName: 'user_name',
-                    meta: 'meta'
-                };
+                static types(): { [key: string]: any } {
+                    return {
+                        avatar: 'string',
+                        createdAt: 'number',
+                        defaultDriveId: 'string',
+                        description: 'string',
+                        domainId: 'string',
+                        email: 'string',
+                        nickName: 'string',
+                        phone: 'string',
+                        role: 'string',
+                        status: 'string',
+                        titles: { type: 'array', itemType: 'string' },
+                        updatedAt: 'number',
+                        userId: 'string',
+                        userName: 'string',
+                        meta: 'map'
+                    };
+                }
+
+                constructor(map: { [key: string]: any }) {
+                    super(map);
+                }
             }
 
-            static types(): { [key: string]: any } {
-                return {
-                    avatar: 'string',
-                    createdAt: 'number',
-                    defaultDriveId: 'string',
-                    description: 'string',
-                    domainId: 'string',
-                    email: 'string',
-                    nickName: 'string',
-                    phone: 'string',
-                    role: 'string',
-                    status: 'string',
-                    titles: { type: 'array', itemType: 'string' },
-                    updatedAt: 'number',
-                    userId: 'string',
-                    userName: 'string',
-                    meta: 'map'
-                };
+            class ListUserResponse extends $tea.Model {
+                items?: BaseUserResponse[]
+                superadmin?: BaseUserResponse
+                stream?: Readable
+                nextMarker?: string
+                listInfo?: ListInfo
+                typeList?: TypeInfo
+                static names(): { [key: string]: string } {
+                    return {
+                        items: 'items',
+                        superadmin: 'superadmin',
+                        stream: 'stream',
+                        nextMarker: 'next_marker',
+                        listInfo: 'list_info',
+                        typeList: 'type_list',
+                    };
+                }
+
+                static types(): { [key: string]: any } {
+                    return {
+                        items: { 'type': 'array', 'itemType': BaseUserResponse },
+                        superadmin: BaseUserResponse,
+                        stream: 'Readable',
+                        nextMarker: 'string',
+                        listInfo: ListInfo,
+                        typeList: { 'type': 'array', 'itemType': TypeInfo },
+                    };
+                }
+
+                constructor(map: { [key: string]: any }) {
+                    super(map);
+                }
             }
 
-            constructor(map: { [key: string]: any }) {
-                super(map);
-            }
-        }
-
-
-
-        class ListUserResponse extends $tea.Model {
-            items?: BaseUserResponse[]
-            superadmin?: BaseUserResponse
-            stream?: Readable
-            nextMarker?: string
-            listInfo?: ListInfo
-            typeList?: TypeInfo
-            static names(): { [key: string]: string } {
-                return {
-                    items: 'items',
-                    superadmin: 'superadmin',
-                    stream: 'stream',
-                    nextMarker: 'next_marker',
-                    listInfo: 'list_info',
-                    typeList: 'type_list',
-                };
-            }
-
-            static types(): { [key: string]: any } {
-                return {
-                    items: { 'type': 'array', 'itemType': BaseUserResponse },
-                    superadmin: BaseUserResponse,
-                    stream: 'Readable',
-                    nextMarker: 'string',
-                    listInfo: ListInfo,
-                    typeList: { 'type': 'array', 'itemType': TypeInfo },
-                };
-            }
-
-            constructor(map: { [key: string]: any }) {
-                super(map);
-            }
-        }
-
-        let response = $tea.cast(data, new ListUserResponse({}));
-        assert.deepStrictEqual(response, new ListUserResponse({
-            items: [
-                new BaseUserResponse({
+            let response = $tea.cast(data, new ListUserResponse({}));
+            assert.deepStrictEqual(response, new ListUserResponse({
+                items: [
+                    new BaseUserResponse({
+                        "avatar": "",
+                        "createdAt": 1568773418121,
+                        "defaultDriveId": "",
+                        "description": "",
+                        "domainId": "sz16",
+                        "email": "",
+                        "nickName": "朴灵",
+                        "phone": "",
+                        "role": "user",
+                        "status": "enabled",
+                        "titles": ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
+                        "updatedAt": 1568773418121,
+                        "userId": "DING-EthqiPlOSS6giE",
+                        "userName": "朴灵",
+                        "meta": meta
+                    }),
+                    new BaseUserResponse({
+                        "avatar": "",
+                        "createdAt": 1568732914442,
+                        "defaultDriveId": "",
+                        "description": "",
+                        "domainId": "sz16",
+                        "email": "",
+                        "nickName": "普冬",
+                        "phone": "",
+                        "role": "user",
+                        "status": "enabled",
+                        "titles": ['高级开发工程师'],
+                        "updatedAt": 0,
+                        "userId": "DING-aefgfel",
+                        "userName": "普冬",
+                        "meta": undefined
+                    })
+                ],
+                "superadmin": new BaseUserResponse({
                     "avatar": "",
-                    "createdAt": 1568773418121,
+                    "createdAt": 1568732914502,
                     "defaultDriveId": "",
                     "description": "",
                     "domainId": "sz16",
                     "email": "",
-                    "nickName": "朴灵",
+                    "nickName": "superadmin",
                     "phone": "",
-                    "role": "user",
+                    "role": "superadmin",
                     "status": "enabled",
-                    "titles": ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
-                    "updatedAt": 1568773418121,
-                    "userId": "DING-EthqiPlOSS6giE",
-                    "userName": "朴灵",
+                    "titles": ['superadmin'],
+                    "updatedAt": 0,
+                    "userId": "superadmin",
+                    "userName": "superadmin",
                     "meta": meta
                 }),
-                new BaseUserResponse({
-                    "avatar": "",
-                    "createdAt": 1568732914442,
-                    "defaultDriveId": "",
-                    "description": "",
-                    "domainId": "sz16",
-                    "email": "",
-                    "nickName": "普冬",
-                    "phone": "",
-                    "role": "user",
-                    "status": "enabled",
-                    "titles": ['高级开发工程师'],
-                    "updatedAt": 0,
-                    "userId": "DING-aefgfel",
-                    "userName": "普冬",
-                    "meta": undefined
-                })
-            ],
-            "superadmin": new BaseUserResponse({
-                "avatar": "",
-                "createdAt": 1568732914502,
-                "defaultDriveId": "",
-                "description": "",
-                "domainId": "sz16",
-                "email": "",
-                "nickName": "superadmin",
-                "phone": "",
-                "role": "superadmin",
-                "status": "enabled",
-                "titles": ['superadmin'],
-                "updatedAt": 0,
-                "userId": "superadmin",
-                "userName": "superadmin",
-                "meta": meta
-            }),
-            "stream": testStream,
-            "listInfo": listInfo,
-            "typeList": typeList,
-            "nextMarker": "next marker"
-        }));
-    });
-
-    it('cast wrong type should error', async function () {
-        class MetaInfo {
-            meta: string
-            constructor(meta: string) {
-                this.meta = meta;
-            }
-        }
-        class UserInfoResponse extends $tea.Model {
-            name: string
-            title: string[]
-            metaInfo: MetaInfo
-            static names(): { [key: string]: string } {
-                return {
-                    name: 'name',
-                    title: 'title',
-                    metaInfo: 'metaInfo',
-                };
-            }
-
-            static types(): { [key: string]: any } {
-                return {
-                    title: { 'type': 'array', 'itemType': 'string' },
-                    name: 'string',
-                    metaInfo: MetaInfo
-                };
-            }
-
-            constructor(map: { [key: string]: any }) {
-                super(map);
-            }
-        }
-
-        assert.throws(function () {
-            $tea.cast(undefined, new UserInfoResponse({}))
-        }, function (err: Error) {
-            assert.strictEqual(err.message, 'can not cast to Map');
-            return true;
+                "stream": testStream,
+                "listInfo": listInfo,
+                "typeList": typeList,
+                "nextMarker": "next marker"
+            }));
         });
 
-        assert.throws(function () {
-            $tea.cast('data', new UserInfoResponse({}));
-        }, function (err: Error) {
-            assert.strictEqual(err.message, 'can not cast to Map');
-            return true;
+        it('cast wrong type should error', function () {
+            class MetaInfo {
+                meta: string
+                constructor(meta: string) {
+                    this.meta = meta;
+                }
+            }
+            class UserInfoResponse extends $tea.Model {
+                name: string
+                title: string[]
+                metaInfo: MetaInfo
+                static names(): { [key: string]: string } {
+                    return {
+                        name: 'name',
+                        title: 'title',
+                        metaInfo: 'metaInfo',
+                    };
+                }
+
+                static types(): { [key: string]: any } {
+                    return {
+                        title: { 'type': 'array', 'itemType': 'string' },
+                        name: 'string',
+                        metaInfo: MetaInfo
+                    };
+                }
+
+                constructor(map: { [key: string]: any }) {
+                    super(map);
+                }
+            }
+
+            assert.throws(function () {
+                $tea.cast(undefined, new UserInfoResponse({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'can not cast to Map');
+                return true;
+            });
+
+            assert.throws(function () {
+                $tea.cast('data', new UserInfoResponse({}));
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'can not cast to Map');
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = {
+                    name: 123,
+                    title: ['高级开发工程师'],
+                    metaInfo: new MetaInfo('开放平台')
+                }
+                $tea.cast(data, new UserInfoResponse({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number');
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = {
+                    name: '普冬',
+                    title: '高级开发工程师',
+                    metaInfo: new MetaInfo('开放平台')
+                }
+                $tea.cast(data, new UserInfoResponse({}));
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string');
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = {
+                    name: '普冬',
+                    title: ['高级开发工程师'],
+                    metaInfo: '开放平台'
+                }
+                $tea.cast(data, new UserInfoResponse({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of metaInfo is mismatch, expect object, but string')
+                return true;
+            });
         });
 
-        assert.throws(function () {
-            const data = {
-                name: 123,
-                title: ['高级开发工程师'],
-                metaInfo: new MetaInfo('开放平台')
-            }
-            $tea.cast(data, new UserInfoResponse({}))
-        }, function (err: Error) {
-            assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number');
-            return true;
-        });
+        it('cast should ok(with bytes)', function () {
+            class BytesModel extends $tea.Model {
+                bytes: Buffer;
+                static names(): { [key: string]: string } {
+                    return {
+                        bytes: 'bytes',
+                    };
+                }
 
-        assert.throws(function () {
-            const data = {
-                name: '普冬',
-                title: '高级开发工程师',
-                metaInfo: new MetaInfo('开放平台')
-            }
-            $tea.cast(data, new UserInfoResponse({}));
-        }, function (err: Error) {
-            assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string');
-            return true;
-        });
+                static types(): { [key: string]: any } {
+                    return {
+                        bytes: 'Buffer',
+                    };
+                }
 
-        assert.throws(function () {
-            const data = {
-                name: '普冬',
-                title: ['高级开发工程师'],
-                metaInfo: '开放平台'
+                constructor(map: { [key: string]: any }) {
+                    super(map);
+                }
             }
-            $tea.cast(data, new UserInfoResponse({}))
-        }, function (err: Error) {
-            assert.strictEqual(err.message, 'type of metaInfo is mismatch, expect object, but string')
-            return true;
+
+            let response = $tea.cast({
+                bytes: Buffer.from('bytes')
+            }, new BytesModel({}));
+
+            assert.deepStrictEqual(response.bytes, Buffer.from('bytes'));
         });
     });
 
