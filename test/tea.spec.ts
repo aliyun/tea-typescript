@@ -180,7 +180,7 @@ describe('$tea', function () {
                         updatedAt: 'number',
                         userId: 'string',
                         userName: 'string',
-                        meta: 'map'
+                        meta: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' },
                     };
                 }
 
@@ -292,6 +292,23 @@ describe('$tea', function () {
                     this.meta = meta;
                 }
             }
+            class MapInfo {
+                map: { [key: string]: any }
+                static names(): { [key: string]: string } {
+                    return {
+                        map: 'map'
+                    };
+                }
+
+                static types(): { [key: string]: any } {
+                    return {
+                        map: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' }
+                    };
+                }
+                constructor(map: { [key: string]: any }) {
+                    this.map = map;
+                }
+            }
             class UserInfoResponse extends $tea.Model {
                 name: string
                 title: string[]
@@ -321,6 +338,14 @@ describe('$tea', function () {
                 $tea.cast(undefined, new UserInfoResponse({}))
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'can not cast to Map');
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = { map: 'string' };
+                $tea.cast(data, new MapInfo({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of map is mismatch, expect object, but string');
                 return true;
             });
 
