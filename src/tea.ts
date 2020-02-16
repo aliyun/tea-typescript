@@ -227,6 +227,11 @@ export function cast<T>(obj: any, t: T): T {
                 throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
             }
             (<any>t)[key] = value;
+        } else if (type.type === 'map') {
+            if (!(value instanceof Object)) {
+                throw new Error(`type of ${key} is mismatch, expect object, but ${typeof value}`);
+            }
+            (<any>t)[key] = value;
         } else if (type.type === 'array') {
             if (!Array.isArray(value)) {
                 throw new Error(`type of ${key} is mismatch, expect array, but ${typeof value}`);
