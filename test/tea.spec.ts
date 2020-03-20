@@ -439,6 +439,8 @@ describe('$tea', function () {
     });
 
     it("isRetryable should ok", function () {
+        assert.strictEqual($tea.isRetryable(undefined), false);
+        assert.strictEqual($tea.isRetryable(null), false);
         assert.strictEqual($tea.isRetryable(new Error('')), false);
         let err = $tea.retryError(new $tea.Request(), null);
         assert.strictEqual($tea.isRetryable(err), true);
