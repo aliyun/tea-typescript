@@ -381,5 +381,8 @@ export function retryError(request: Request, response: Response): Error {
 }
 
 export function isRetryable(err: Error): boolean {
-    return err instanceof RetryError;
+    if (typeof err === 'undefined' || err === null) {
+        return false;
+    }
+    return err.name === 'RetryError';
 }
