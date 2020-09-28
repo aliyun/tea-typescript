@@ -1,12 +1,12 @@
 {
-  "name": "@alicloud/tea-typescript",
-  "version": "1.6.2",
+  "name": "@darabonba/typescript",
+  "version": "0.0.1",
   "description": "",
-  "main": "dist/tea.js",
-  "types": "dist/tea.d.ts",
+  "main": "dist/darabonba.js",
+  "types": "dist/darabonba.d.ts",
   "repository": {
     "type": "git",
-    "url": "git@github.com:aliyun/tea-typescript.git"
+    "url": "git@github.com:aliyun/darabonba-typescript.git"
   },
   "license": "ISC",
   "scripts": {

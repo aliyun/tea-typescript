@@ -7,6 +7,60 @@ import { parse } from 'url';
 type TeaDict = { [key: string]: string };
 type TeaObject = { [key: string]: any };
 
+export function isUnset(value: any): boolean {
+    if (typeof value === 'undefined') {
+        return true;
+    }
+    if (value == null) {
+        return true;
+    }
+    return false;
+}
+
+export function setToMap(map: {[key: string]: any}, key: string, value: any) {
+    if (isUnset(value)) {
+        return;
+    }
+    map[key] = value;
+}
+
+export function mapify(value: any): any {
+    // null, undefined
+    if (isUnset(value)) {
+        return value;
+    }
+
+    // Model
+    if (value instanceof Model) {
+        return value.toMap();
+    }
+
+    // array
+    if (Array.isArray(value)) {
+        return value.map((item) => {
+            return mapify(item);
+        });
+    }
+
+    // map
+    if (typeof value === 'object') {
+        let map: {[key: string]: any} = {};
+        for (const key in value) {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+                map[key] = mapify(value[key]);
+            }
+        }
+        return map;
+    }
+
+    return value;
+}
+
+export function push<T>(list: T[], item: T): T[] {
+    list.push(item);
+    return list;
+}
+
 export class BytesReadable extends Readable {
     value: Buffer
 
@@ -177,39 +231,8 @@ export function toMap(value: any = undefined): any {
 }
 
 export class Model {
-    [key: string]: any
-
-    constructor(map?: TeaObject) {
-        if (map == null) {
-            return;
-        }
-
-        let clz = <any>this.constructor;
-        let names = <TeaDict>clz.names();
-        let types = <TeaObject>clz.types();
-        Object.keys(names).forEach((name => {
-            let value = map[name];
-            if (value === undefined || value === null) {
-                return;
-            }
-            let type = types[name];
-            this[name] = getValue(type, value);
-        }));
-    }
-
-    toMap(): TeaObject {
-        const map: TeaObject = {};
-        let clz = <any>this.constructor;
-        let names = <TeaDict>clz.names();
-        Object.keys(names).forEach((name => {
-            const originName = names[name];
-            const value = this[name];
-            if (typeof value === 'undefined' || value == null) {
-                return;
-            }
-            map[originName] = toMap(value);
-        }));
-        return map;
+    toMap(): { [key: string]: any} {
+        throw new Error("sub-class of Model should implement toMap() method");
     }
 }
 
@@ -237,11 +260,6 @@ export function cast<T>(obj: any, t: T): T {
         if (typeof type === 'string') {
             if (type !== 'Readable' && type !== 'map' && type !== 'Buffer' && typeof value !== type) {
                 throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
-            }
-            (<any>t)[key] = value;
-        } else if (type.type === 'map') {
-            if (!(value instanceof Object)) {
-                throw new Error(`type of ${key} is mismatch, expect object, but ${typeof value}`);
             }
             (<any>t)[key] = value;
         } else if (type.type === 'array') {
@@ -393,8 +411,5 @@ export function retryError(request: Request, response: Response): Error {
 }
 
 export function isRetryable(err: Error): boolean {
-    if (typeof err === 'undefined' || err === null) {
-        return false;
-    }
-    return err.name === 'RetryError';
+    return err instanceof RetryError;
 }

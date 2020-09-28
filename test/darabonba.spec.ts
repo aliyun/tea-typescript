@@ -7,7 +7,7 @@ import assert from 'assert';
 import { AddressInfo } from 'net';
 import { Readable } from 'stream';
 
-import * as $tea from "../src/tea";
+import * as $dara from "../src/darabonba";
 
 const server = http.createServer((req, res) => {
     const urlObj = url.parse(req.url, true);
@@ -37,7 +37,7 @@ function read(readable: Readable): Promise<Buffer> {
     });
 }
 
-describe('$tea', function () {
+describe('$dara', function () {
 
     before((done) => {
         server.listen(0, done);
@@ -129,7 +129,7 @@ describe('$tea', function () {
                 next_marker: 'next marker'
             };
 
-            class BaseUserResponse extends $tea.Model {
+            class BaseUserResponse extends $dara.Model {
                 avatar?: string
                 createdAt?: number
                 defaultDriveId?: string
@@ -180,7 +180,7 @@ describe('$tea', function () {
                         updatedAt: 'number',
                         userId: 'string',
                         userName: 'string',
-                        meta: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' },
+                        meta: 'map'
                     };
                 }
 
@@ -189,7 +189,7 @@ describe('$tea', function () {
                 }
             }
 
-            class ListUserResponse extends $tea.Model {
+            class ListUserResponse extends $dara.Model {
                 items?: BaseUserResponse[]
                 superadmin?: BaseUserResponse
                 stream?: Readable
@@ -223,7 +223,7 @@ describe('$tea', function () {
                 }
             }
 
-            let response = $tea.cast(data, new ListUserResponse({}));
+            let response = $dara.cast(data, new ListUserResponse({}));
             assert.deepStrictEqual(response, new ListUserResponse({
                 items: [
                     new BaseUserResponse({
@@ -292,24 +292,7 @@ describe('$tea', function () {
                     this.meta = meta;
                 }
             }
-            class MapInfo {
-                map: { [key: string]: any }
-                static names(): { [key: string]: string } {
-                    return {
-                        map: 'map'
-                    };
-                }
-
-                static types(): { [key: string]: any } {
-                    return {
-                        map: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' }
-                    };
-                }
-                constructor(map: { [key: string]: any }) {
-                    this.map = map;
-                }
-            }
-            class UserInfoResponse extends $tea.Model {
+            class UserInfoResponse extends $dara.Model {
                 name: string
                 title: string[]
                 metaInfo: MetaInfo
@@ -335,22 +318,14 @@ describe('$tea', function () {
             }
 
             assert.throws(function () {
-                $tea.cast(undefined, new UserInfoResponse({}))
+                $dara.cast(undefined, new UserInfoResponse({}))
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'can not cast to Map');
                 return true;
             });
 
             assert.throws(function () {
-                const data = { map: 'string' };
-                $tea.cast(data, new MapInfo({}))
-            }, function (err: Error) {
-                assert.strictEqual(err.message, 'type of map is mismatch, expect object, but string');
-                return true;
-            });
-
-            assert.throws(function () {
-                $tea.cast('data', new UserInfoResponse({}));
+                $dara.cast('data', new UserInfoResponse({}));
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'can not cast to Map');
                 return true;
@@ -362,7 +337,7 @@ describe('$tea', function () {
                     title: ['高级开发工程师'],
                     metaInfo: new MetaInfo('开放平台')
                 }
-                $tea.cast(data, new UserInfoResponse({}))
+                $dara.cast(data, new UserInfoResponse({}))
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number');
                 return true;
@@ -374,7 +349,7 @@ describe('$tea', function () {
                     title: '高级开发工程师',
                     metaInfo: new MetaInfo('开放平台')
                 }
-                $tea.cast(data, new UserInfoResponse({}));
+                $dara.cast(data, new UserInfoResponse({}));
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'type of title is mismatch, expect array, but string');
                 return true;
@@ -386,7 +361,7 @@ describe('$tea', function () {
                     title: ['高级开发工程师'],
                     metaInfo: '开放平台'
                 }
-                $tea.cast(data, new UserInfoResponse({}))
+                $dara.cast(data, new UserInfoResponse({}))
             }, function (err: Error) {
                 assert.strictEqual(err.message, 'type of metaInfo is mismatch, expect object, but string')
                 return true;
@@ -394,7 +369,7 @@ describe('$tea', function () {
         });
 
         it('cast should ok(with bytes)', function () {
-            class BytesModel extends $tea.Model {
+            class BytesModel extends $dara.Model {
                 bytes: Buffer;
                 static names(): { [key: string]: string } {
                     return {
@@ -413,7 +388,7 @@ describe('$tea', function () {
                 }
             }
 
-            let response = $tea.cast({
+            let response = $dara.cast({
                 bytes: Buffer.from('bytes')
             }, new BytesModel({}));
 
@@ -422,95 +397,93 @@ describe('$tea', function () {
     });
 
     it("retryError should ok", function () {
-        let err = $tea.retryError(new $tea.Request(), null);
+        let err = $dara.retryError(new $dara.Request(), null);
         assert.strictEqual(err.name, "RetryError");
     });
 
     it("readable with string should ok", async function () {
-        let readable = new $tea.BytesReadable('string');
+        let readable = new $dara.BytesReadable('string');
         const buffer = await read(readable);
         assert.strictEqual(buffer.toString(), 'string');
     });
 
     it("readable with buffer should ok", async function () {
-        let readable = new $tea.BytesReadable(Buffer.from('string'));
+        let readable = new $dara.BytesReadable(Buffer.from('string'));
         const buffer = await read(readable);
         assert.strictEqual(buffer.toString(), 'string');
     });
 
     it("isRetryable should ok", function () {
-        assert.strictEqual($tea.isRetryable(undefined), false);
-        assert.strictEqual($tea.isRetryable(null), false);
-        assert.strictEqual($tea.isRetryable(new Error('')), false);
-        let err = $tea.retryError(new $tea.Request(), null);
-        assert.strictEqual($tea.isRetryable(err), true);
+        assert.strictEqual($dara.isRetryable(new Error('')), false);
+        let err = $dara.retryError(new $dara.Request(), null);
+        assert.strictEqual($dara.isRetryable(err), true);
     });
 
     it('newUnretryableError should ok', function () {
-        let err = $tea.newUnretryableError(new $tea.Request());
+        let err = $dara.newUnretryableError(new $dara.Request());
         assert.strictEqual(err.name, "UnretryableError");
     });
 
     it('allowRetry should ok', function () {
         // first time to call allowRetry, return true
-        assert.strictEqual($tea.allowRetry({}, 0, Date.now()), true);
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({}, 0, Date.now()), true);
+        assert.strictEqual($dara.allowRetry({
             retryable: false
         }, 1, Date.now()), false);
         // never policy
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'never'
         }, 1, Date.now()), false);
         // always policy
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'always'
         }, 1, Date.now()), true);
         // simple policy
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'simple',
             maxAttempts: 3
         }, 1, Date.now()), true);
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'simple',
             maxAttempts: 3
         }, 3, Date.now()), false);
         // timeout
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'timeout',
             timeout: 10
         }, 1, Date.now() - 100), false);
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true,
             policy: 'timeout',
             timeout: 10
         }, 1, Date.now() - 5), true);
         // default
-        assert.strictEqual($tea.allowRetry({
+        assert.strictEqual($dara.allowRetry({
             retryable: true
         }, 1, Date.now()), false);
     });
 
     it('getBackoffTime should ok', function () {
         // first time
-        assert.strictEqual($tea.getBackoffTime({}, 0), 0);
+        assert.strictEqual($dara.getBackoffTime({}, 0), 0);
         // no policy
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'no'
         }, 1), 0);
 
         // fixed policy
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'fixed',
             period: 100
         }, 1), 100);
 
         // random policy
-        let time = $tea.getBackoffTime({
+        let time = $dara.getBackoffTime({
             policy: 'random',
             minPeriod: 10,
             maxPeriod: 100
@@ -519,32 +492,32 @@ describe('$tea', function () {
 
         // exponential policy
         // 1 time
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'exponential',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 1), 10);
         // 2 time
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'exponential',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 2), 20);
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'exponential',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 3), 40);
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'exponential',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 4), 80);
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
             policy: 'exponential',
             initial: 10,
             max: 100,
@@ -552,7 +525,7 @@ describe('$tea', function () {
         }, 5), 100);
         // exponential_random policy
         // 1 time
-        let b = $tea.getBackoffTime({
+        let b = $dara.getBackoffTime({
             policy: 'exponential_random',
             initial: 10,
             max: 100,
@@ -560,28 +533,28 @@ describe('$tea', function () {
         }, 1);
         assert.strictEqual(b >= 5 && b <= 15, true);
         // 2 time
-        b = $tea.getBackoffTime({
+        b = $dara.getBackoffTime({
             policy: 'exponential_random',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 2);
         assert.strictEqual(b >= 10 && b <= 30, true);
-        b = $tea.getBackoffTime({
+        b = $dara.getBackoffTime({
             policy: 'exponential_random',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 3);
         assert.strictEqual(b >= 20 && b <= 60, true);
-        b = $tea.getBackoffTime({
+        b = $dara.getBackoffTime({
             policy: 'exponential_random',
             initial: 10,
             max: 100,
             multiplier: 1
         }, 4);
         assert.strictEqual(b >= 40 && b <= 100, true);
-        b = $tea.getBackoffTime({
+        b = $dara.getBackoffTime({
             policy: 'exponential_random',
             initial: 10,
             max: 100,
@@ -590,12 +563,12 @@ describe('$tea', function () {
         assert.strictEqual(b, 100);
 
         // default
-        assert.strictEqual($tea.getBackoffTime({
+        assert.strictEqual($dara.getBackoffTime({
         }, 5), 0);
     });
 
     it("new Model should ok", function () {
-        class SubModel extends $tea.Model {
+        class SubModel extends $dara.Model {
             status?: number
             static names(): { [key: string]: string } {
                 return {
@@ -613,7 +586,7 @@ describe('$tea', function () {
                 super(map);
             }
         }
-        class MyModel extends $tea.Model {
+        class MyModel extends $dara.Model {
             avatar?: string
             role?: string[]
             status: SubModel
@@ -640,30 +613,30 @@ describe('$tea', function () {
 
         let m = new MyModel(null);
         assert.strictEqual(m.avatar, undefined);
-        assert.strictEqual($tea.toMap(m)["avatar"], undefined);
-        assert.strictEqual($tea.toMap(), null);
-        assert.strictEqual($tea.toMap(undefined), null);
-        assert.strictEqual($tea.toMap(null), null);
+        assert.strictEqual($dara.toMap(m)["avatar"], undefined);
+        assert.strictEqual($dara.toMap(), null);
+        assert.strictEqual($dara.toMap(undefined), null);
+        assert.strictEqual($dara.toMap(null), null);
 
         m = new MyModel({ avatar: "avatar url" });
         assert.strictEqual(m.avatar, "avatar url");
-        assert.strictEqual($tea.toMap(m)["avatar"], "avatar url");
+        assert.strictEqual($dara.toMap(m)["avatar"], "avatar url");
 
         m = new MyModel({
             avatar: "avatar url",
             role: ['admin', 'user'],
         });
-        assert.strictEqual($tea.toMap(m)["role"][0], 'admin');
-        assert.strictEqual($tea.toMap(m)["role"][1], 'user');
+        assert.strictEqual($dara.toMap(m)["role"][0], 'admin');
+        assert.strictEqual($dara.toMap(m)["role"][1], 'user');
 
         m = new MyModel({
             status: new SubModel({ status: 1 })
         });
-        assert.strictEqual($tea.toMap(m)["status"]["status"], 1);
+        assert.strictEqual($dara.toMap(m)["status"]["status"], 1);
     });
 
     it("new Model with wrong type should error", function () {
-        class MyModel extends $tea.Model {
+        class MyModel extends $dara.Model {
             avatar?: string
             role?: string[]
             static names(): { [key: string]: string } {
@@ -697,12 +670,12 @@ describe('$tea', function () {
 
     it("sleep should ok", async function () {
         let start = Date.now();
-        await $tea.sleep(10);
+        await $dara.sleep(10);
         assert.ok(Date.now() - start >= 10);
     });
 
     it("newError should ok", function () {
-        let err = $tea.newError({
+        let err = $dara.newError({
             code: "code",
             message: "message"
         });
@@ -710,36 +683,36 @@ describe('$tea', function () {
     });
 
     it('doAction should ok', async function () {
-        let request = new $tea.Request();
+        let request = new $dara.Request();
         request.pathname = '/';
         request.port = (server.address() as AddressInfo).port;
         request.headers['host'] = '127.0.0.1';
         request.query = { id: '1' };
-        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
+        let res = await $dara.doAction(request, { timeout: 1000, ignoreSSL: true });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
     });
 
     it('doAction when path with query should ok', async function () {
-        let request = new $tea.Request();
+        let request = new $dara.Request();
         request.pathname = '/?name';
         request.port = (server.address() as AddressInfo).port;
         request.headers['host'] = '127.0.0.1';
         request.query = { id: '1' };
-        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
+        let res = await $dara.doAction(request, { timeout: 1000, ignoreSSL: true });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
     });
 
     it('doAction with post method should ok', async function () {
-        let request = new $tea.Request();
+        let request = new $dara.Request();
         request.method = 'POST';
         request.pathname = '/';
         request.port = (server.address() as AddressInfo).port;
         request.headers['host'] = '127.0.0.1';
-        let res = await $tea.doAction(request, { timeout: 1000, ignoreSSL: true });
+        let res = await $dara.doAction(request, { timeout: 1000, ignoreSSL: true });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
