@@ -744,4 +744,37 @@ describe('$tea', function () {
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
     });
+
+    it('doAction with self-signed certificates should ok', async function () {
+        let request = new $tea.Request();
+        request.method = 'POST';
+        request.pathname = '/';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        let res = await $tea.doAction(request, {
+            timeout: 1000,
+            ignoreSSL: true,
+            key: 'private rsa key',
+            cert: 'private certification',
+        });
+        assert.strictEqual(res.statusCode, 200);
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('doAction with ca should ok', async function () {
+        let request = new $tea.Request();
+        request.method = 'POST';
+        request.pathname = '/';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        let res = await $tea.doAction(request, {
+            timeout: 1000,
+            ignoreSSL: true,
+            ca: 'ca',
+        });
+        assert.strictEqual(res.statusCode, 200);
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
 });
