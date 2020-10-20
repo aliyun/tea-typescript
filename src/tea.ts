@@ -110,7 +110,7 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
         }
 
         if (typeof runtime.ignoreSSL !== 'undefined') {
-            options.rejectUnauthorized = !!runtime.ignoreSSL;
+            options.rejectUnauthorized = !runtime.ignoreSSL;
         }
 
         if (typeof runtime.key !== 'undefined') {
