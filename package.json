@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git@github.com:aliyun/darabonba-typescript.git"
   },
-  "license": "ISC",
+  "license": "Apache License 2.0",
   "scripts": {
     "test": "mocha -r ts-node/register -r source-map-support/register test/**/*.spec.ts",
     "test-cov": "nyc -e .ts -r=html -r=text -r=lcov npm run test",
