@@ -118,7 +118,7 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
         }
 
         if (typeof runtime.cert !== 'undefined') {
-            options.cert = String(runtime.key);
+            options.cert = String(runtime.cert);
         }
 
         if (typeof runtime.ca !== 'undefined') {
