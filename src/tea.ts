@@ -109,6 +109,14 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
             options.timeout = Number(runtime.timeout);
         }
 
+        if (typeof runtime.readTimeout !== 'undefined') {
+            options.readTimeout = Number(runtime.readTimeout);
+        }
+
+        if (typeof runtime.connectTimeout !== 'undefined') {
+            options.connectTimeout = Number(runtime.connectTimeout);
+        }
+
         if (typeof runtime.ignoreSSL !== 'undefined') {
             options.rejectUnauthorized = !runtime.ignoreSSL;
         }
