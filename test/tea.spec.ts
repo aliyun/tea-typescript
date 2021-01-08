@@ -15,7 +15,7 @@ const server = http.createServer((req, res) => {
         setTimeout(() => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('Hello world!');
-        }, 200);
+        }, 5000);
     } else if (urlObj.pathname === '/query') {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end(JSON.stringify(urlObj.query));
@@ -772,6 +772,21 @@ describe('$tea', function () {
             timeout: 1000,
             ignoreSSL: true,
             ca: 'ca',
+        });
+        assert.strictEqual(res.statusCode, 200);
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('doAction with timeout should ok', async function () {
+        let request = new $tea.Request();
+        request.method = 'POST';
+        request.pathname = '/timeout';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        let res = await $tea.doAction(request, {
+            connectTimeout: 6000,
+            readTimeout: 6000
         });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
