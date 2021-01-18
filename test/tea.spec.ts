@@ -597,15 +597,18 @@ describe('$tea', function () {
     it("new Model should ok", function () {
         class SubModel extends $tea.Model {
             status?: number
+            bytes?: Readable
             static names(): { [key: string]: string } {
                 return {
                     status: 'status',
+                    bytes: 'bytes'
                 };
             }
 
             static types(): { [key: string]: any } {
                 return {
-                    status: 'number'
+                    status: 'number',
+                    bytes: 'Readable'
                 };
             }
 
@@ -657,9 +660,13 @@ describe('$tea', function () {
         assert.strictEqual($tea.toMap(m)["role"][1], 'user');
 
         m = new MyModel({
-            status: new SubModel({ status: 1 })
+            status: new SubModel({
+                status: 1,
+                bytes: new $tea.BytesReadable('test')
+            })
         });
         assert.strictEqual($tea.toMap(m)["status"]["status"], 1);
+        assert.strictEqual($tea.toMap(m)["status"]["bytes"], undefined);
     });
 
     it("new Model with wrong type should error", function () {
