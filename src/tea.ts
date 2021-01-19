@@ -245,7 +245,11 @@ export function cast<T>(obj: any, t: T): T {
         }
 
         if (typeof type === 'string') {
-            if (type !== 'Readable' && type !== 'map' && type !== 'Buffer' && typeof value !== type) {
+            if (type !== 'Readable' &&
+                type !== 'map' &&
+                type !== 'Buffer' &&
+                type !== 'any' &&
+                typeof value !== type) {
                 throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
             }
             (<any>t)[key] = value;

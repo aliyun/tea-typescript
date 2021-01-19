@@ -69,6 +69,9 @@ describe('$tea', function () {
             };
             const listInfo = new ListInfo(2);
             const typeList = [new TypeInfo('user'), new TypeInfo('admin')];
+            const info = {
+                info: 'ok'
+            };
             let data = {
                 items: [
                     {
@@ -86,7 +89,8 @@ describe('$tea', function () {
                         user_name: '朴灵',
                         description: '',
                         default_drive_id: '',
-                        meta
+                        meta,
+                        extra: info
                     },
                     {
                         domain_id: 'sz16',
@@ -103,7 +107,7 @@ describe('$tea', function () {
                         user_name: '普冬',
                         description: '',
                         default_drive_id: '',
-                        meta: undefined
+                        extra: 'simple'
                     }
                 ],
                 superadmin: {
@@ -144,6 +148,8 @@ describe('$tea', function () {
                 updatedAt?: number
                 userId?: string
                 userName?: string
+                meta?: { [key: string]: any }
+                extra?: any
                 static names(): { [key: string]: string } {
                     return {
                         avatar: 'avatar',
@@ -160,7 +166,8 @@ describe('$tea', function () {
                         updatedAt: 'updated_at',
                         userId: 'user_id',
                         userName: 'user_name',
-                        meta: 'meta'
+                        meta: 'meta',
+                        extra: 'extra',
                     };
                 }
 
@@ -181,6 +188,7 @@ describe('$tea', function () {
                         userId: 'string',
                         userName: 'string',
                         meta: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' },
+                        extra: 'any',
                     };
                 }
 
@@ -241,7 +249,8 @@ describe('$tea', function () {
                         "updatedAt": 1568773418121,
                         "userId": "DING-EthqiPlOSS6giE",
                         "userName": "朴灵",
-                        "meta": meta
+                        "meta": meta,
+                        "extra": {info: 'ok'}
                     }),
                     new BaseUserResponse({
                         "avatar": "",
@@ -258,7 +267,8 @@ describe('$tea', function () {
                         "updatedAt": 0,
                         "userId": "DING-aefgfel",
                         "userName": "普冬",
-                        "meta": undefined
+                        "meta": undefined,
+                        "extra": 'simple'
                     })
                 ],
                 "superadmin": new BaseUserResponse({
