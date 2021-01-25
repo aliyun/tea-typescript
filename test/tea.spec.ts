@@ -82,6 +82,7 @@ describe('$tea', function () {
                         updated_at: 1568773418121,
                         email: '',
                         nick_name: '朴灵',
+                        strong: 'true',
                         phone: '',
                         role: 'user',
                         status: 'enabled',
@@ -100,11 +101,30 @@ describe('$tea', function () {
                         updated_at: 0,
                         email: '',
                         nick_name: '普冬',
+                        strong: 1,
                         phone: '',
                         role: 'user',
                         status: 'enabled',
                         titles: ['高级开发工程师'],
                         user_name: '普冬',
+                        description: '',
+                        default_drive_id: '',
+                        extra: 'simple'
+                    },
+                    {
+                        domain_id: 1234,
+                        user_id: 'DING-aefgfesd',
+                        avatar: '',
+                        created_at: '1568732914442',
+                        updated_at: '0',
+                        email: '',
+                        nick_name: 'test',
+                        strong: 'false',
+                        phone: '',
+                        role: 'user',
+                        status: 'enabled',
+                        titles: ['测试工程师'],
+                        user_name: 'TS',
                         description: '',
                         default_drive_id: '',
                         extra: 'simple'
@@ -118,6 +138,7 @@ describe('$tea', function () {
                     updated_at: 0,
                     email: '',
                     nick_name: 'superadmin',
+                    strong: false,
                     phone: '',
                     role: 'superadmin',
                     status: 'enabled',
@@ -141,6 +162,7 @@ describe('$tea', function () {
                 domainId?: string
                 email?: string
                 nickName?: string
+                strong?: boolean
                 phone?: string
                 role?: string
                 status?: string
@@ -159,6 +181,7 @@ describe('$tea', function () {
                         domainId: 'domain_id',
                         email: 'email',
                         nickName: 'nick_name',
+                        strong: 'strong',
                         phone: 'phone',
                         role: 'role',
                         status: 'status',
@@ -180,6 +203,7 @@ describe('$tea', function () {
                         domainId: 'string',
                         email: 'string',
                         nickName: 'string',
+                        strong: 'boolean',
                         phone: 'string',
                         role: 'string',
                         status: 'string',
@@ -240,6 +264,7 @@ describe('$tea', function () {
                         "defaultDriveId": "",
                         "description": "",
                         "domainId": "sz16",
+                        "strong": true,
                         "email": "",
                         "nickName": "朴灵",
                         "phone": "",
@@ -260,6 +285,7 @@ describe('$tea', function () {
                         "domainId": "sz16",
                         "email": "",
                         "nickName": "普冬",
+                        "strong": true,
                         "phone": "",
                         "role": "user",
                         "status": "enabled",
@@ -267,6 +293,25 @@ describe('$tea', function () {
                         "updatedAt": 0,
                         "userId": "DING-aefgfel",
                         "userName": "普冬",
+                        "meta": undefined,
+                        "extra": 'simple'
+                    }),
+                    new BaseUserResponse({
+                        "avatar": "",
+                        "createdAt": 1568732914442,
+                        "defaultDriveId": "",
+                        "description": "",
+                        "domainId": "1234",
+                        "email": "",
+                        "nickName": "test",
+                        "strong": false,
+                        "phone": "",
+                        "role": "user",
+                        "status": "enabled",
+                        "titles": ['测试工程师'],
+                        "updatedAt": 0,
+                        "userId": "DING-aefgfesd",
+                        "userName": "TS",
                         "meta": undefined,
                         "extra": 'simple'
                     })
@@ -279,6 +324,7 @@ describe('$tea', function () {
                     "domainId": "sz16",
                     "email": "",
                     "nickName": "superadmin",
+                    "strong": false,
                     "phone": "",
                     "role": "superadmin",
                     "status": "enabled",
@@ -321,12 +367,16 @@ describe('$tea', function () {
             }
             class UserInfoResponse extends $tea.Model {
                 name: string
+                age: number
+                strong: boolean
                 title: string[]
                 metaInfo: MetaInfo
                 static names(): { [key: string]: string } {
                     return {
                         name: 'name',
                         title: 'title',
+                        strong: 'strong',
+                        age: 'age',
                         metaInfo: 'metaInfo',
                     };
                 }
@@ -335,6 +385,8 @@ describe('$tea', function () {
                     return {
                         title: { 'type': 'array', 'itemType': 'string' },
                         name: 'string',
+                        age: 'number',
+                        strong: 'boolean',
                         metaInfo: MetaInfo
                     };
                 }
@@ -368,19 +420,23 @@ describe('$tea', function () {
 
             assert.throws(function () {
                 const data = {
-                    name: 123,
+                    name: ['123'],
+                    age: 21,
+                    strong: true,
                     title: ['高级开发工程师'],
                     metaInfo: new MetaInfo('开放平台')
                 }
                 $tea.cast(data, new UserInfoResponse({}))
             }, function (err: Error) {
-                assert.strictEqual(err.message, 'type of name is mismatch, expect string, but number');
+                assert.strictEqual(err.message, 'type of name is mismatch, expect string, but object');
                 return true;
             });
 
             assert.throws(function () {
                 const data = {
                     name: '普冬',
+                    age: 21,
+                    strong: true,
                     title: '高级开发工程师',
                     metaInfo: new MetaInfo('开放平台')
                 }
@@ -393,6 +449,36 @@ describe('$tea', function () {
             assert.throws(function () {
                 const data = {
                     name: '普冬',
+                    age: '21a',
+                    strong: true,
+                    title: ['高级开发工程师'],
+                    metaInfo: new MetaInfo('开放平台')
+                }
+                $tea.cast(data, new UserInfoResponse({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of age is mismatch, expect number, but string')
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = {
+                    name: '普冬',
+                    age: 21,
+                    strong: 'ture',
+                    title: ['高级开发工程师'],
+                    metaInfo: new MetaInfo('开放平台')
+                }
+                $tea.cast(data, new UserInfoResponse({}))
+            }, function (err: Error) {
+                assert.strictEqual(err.message, 'type of strong is mismatch, expect boolean, but string')
+                return true;
+            });
+
+            assert.throws(function () {
+                const data = {
+                    name: '普冬',
+                    age: 21,
+                    strong: true,
                     title: ['高级开发工程师'],
                     metaInfo: '开放平台'
                 }
