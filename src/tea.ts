@@ -243,16 +243,43 @@ export function cast<T>(obj: any, t: T): T {
         if (typeof value === 'undefined' || value == null) {
             return;
         }
-
         if (typeof type === 'string') {
-            if (type !== 'Readable' &&
-                type !== 'map' &&
-                type !== 'Buffer' &&
-                type !== 'any' &&
-                typeof value !== type) {
-                throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
+            if (type === 'Readable' ||
+                type === 'map' ||
+                type === 'Buffer' ||
+                type === 'any' || 
+                typeof value === type) {
+                (<any>t)[key] = value;
+                return;
             }
-            (<any>t)[key] = value;
+            if (type === 'string' &&
+                (typeof value === 'number' ||
+                    typeof value === 'boolean')) {
+                (<any>t)[key] = value.toString();
+                return;
+            }
+            if (type === 'boolean') {
+                if (value === 1 || value === 0) {
+                    (<any>t)[key] = !!value;
+                    return;
+                } 
+                if (value === 'true' || value === 'false') {
+                    (<any>t)[key] = value === 'true';
+                    return;
+                }
+            }
+
+            if (type === 'number' && typeof value === 'string') {
+                if (value.match(/^\d*$/)) {
+                    (<any>t)[key] = parseInt(value);
+                    return;
+                }
+                if (value.match(/^[\.\d]*$/)) {
+                    (<any>t)[key] = parseFloat(value);
+                    return;
+                }
+            }
+            throw new Error(`type of ${key} is mismatch, expect ${type}, but ${typeof value}`);
         } else if (type.type === 'map') {
             if (!(value instanceof Object)) {
                 throw new Error(`type of ${key} is mismatch, expect object, but ${typeof value}`);
