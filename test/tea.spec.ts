@@ -112,10 +112,10 @@ describe('$tea', function () {
                         extra: 'simple'
                     },
                     {
-                        domain_id: 1234,
+                        domain_id: 9007199254740991,
                         user_id: 'DING-aefgfesd',
                         avatar: '',
-                        created_at: '1568732914442',
+                        created_at: '9007199254740991',
                         updated_at: '0',
                         email: '',
                         nick_name: 'test',
@@ -298,10 +298,10 @@ describe('$tea', function () {
                     }),
                     new BaseUserResponse({
                         "avatar": "",
-                        "createdAt": 1568732914442,
+                        "createdAt": 9007199254740991,
                         "defaultDriveId": "",
                         "description": "",
-                        "domainId": "1234",
+                        "domainId": "9007199254740991",
                         "email": "",
                         "nickName": "test",
                         "strong": false,
