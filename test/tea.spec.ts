@@ -515,6 +515,40 @@ describe('$tea', function () {
 
             assert.deepStrictEqual(response.bytes, Buffer.from('bytes'));
         });
+
+        it('cast should ok(with big number)', function () {
+            class bigNumModel extends $tea.Model {
+                num: number;
+                str: string;
+                static names(): { [key: string]: string } {
+                    return {
+                        num: 'num',
+                        str: 'str',
+                    };
+                }
+
+                static types(): { [key: string]: any } {
+                    return {
+                        num: 'number',
+                        str: 'string',
+                    };
+                }
+
+                constructor(map: { [key: string]: any }) {
+                    super(map);
+                }
+            }
+
+            let response = $tea.cast({
+                num: '9007199254740991',
+                str: 9007199254740991,
+            }, new bigNumModel({}));
+
+            assert.deepStrictEqual(response, new bigNumModel({
+                num: 9007199254740991,
+                str: '9007199254740991',
+            }));
+        });
     });
 
     it("retryError should ok", function () {
