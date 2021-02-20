@@ -212,9 +212,7 @@ export class Model {
         Object.keys(names).forEach((name => {
             const originName = names[name];
             const value = this[name];
-            if (typeof value === 'undefined'
-                || value == null
-                || value instanceof Readable) {
+            if (typeof value === 'undefined' || value == null) {
                 return;
             }
             map[originName] = toMap(value);

@@ -788,15 +788,15 @@ describe('$tea', function () {
         });
         assert.strictEqual($tea.toMap(m)["role"][0], 'admin');
         assert.strictEqual($tea.toMap(m)["role"][1], 'user');
-
+        const testReadalbe = new $tea.BytesReadable('test');
         m = new MyModel({
             status: new SubModel({
                 status: 1,
-                bytes: new $tea.BytesReadable('test')
+                bytes: testReadalbe
             })
         });
         assert.strictEqual($tea.toMap(m)["status"]["status"], 1);
-        assert.strictEqual($tea.toMap(m)["status"]["bytes"], undefined);
+        assert.strictEqual($tea.toMap(m)["status"]["bytes"], testReadalbe);
     });
 
     it("new Model with wrong type should error", function () {
