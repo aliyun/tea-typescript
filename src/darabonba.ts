@@ -27,6 +27,12 @@ export function mapify(value: any): any {
         return value.toMap();
     }
 
+    // 如果是另一个版本的 tea-typescript 创建的 model，instanceof 会判断不通过
+    // 这里做一下处理
+    if (typeof value.toMap === 'function') {
+        return value.toMap();
+    }
+
     // array
     if (Array.isArray(value)) {
         return value.map((item) => {
@@ -64,6 +70,12 @@ export function toMap(value: any = undefined): any {
     }
 
     if (value instanceof Model) {
+        return value.toMap();
+    }
+
+    // 如果是另一个版本的 tea-typescript 创建的 model，instanceof 会判断不通过
+    // 这里做一下处理
+    if (typeof value.toMap === 'function') {
         return value.toMap();
     }
 
