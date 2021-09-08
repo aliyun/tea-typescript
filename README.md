@@ -1,6 +1,7 @@
 # Darabonba Support for TypeScript/Node.js
 
 [![NPM version][npm-image]][npm-url]
+[![Node.js CI](https://github.com/aliyun/tea-typescript/actions/workflows/node.js.yml/badge.svg)](https://github.com/aliyun/tea-typescript/actions/workflows/node.js.yml)
 [![build status][travis-image]][travis-url]
 [![codecov][cov-image]][cov-url]
 [![David deps][david-image]][david-url]
