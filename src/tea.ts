@@ -175,6 +175,12 @@ export function toMap(value: any = undefined): any {
         return value.toMap();
     }
 
+    // 如果是另一个版本的 tea-typescript 创建的 model，instanceof 会判断不通过
+    // 这里做一下处理
+    if (typeof value.toMap === 'function') {
+        return value.toMap();
+    }
+
     if (Array.isArray(value)) {
         return value.map((item) => {
             return toMap(item);
