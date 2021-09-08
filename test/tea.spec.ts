@@ -48,7 +48,7 @@ describe('$tea', function () {
         server.close(done);
     });
 
-    describe('cast', function() {
+    describe('cast', function () {
 
         it('cast should ok', function () {
             class ListInfo {
@@ -928,5 +928,16 @@ describe('$tea', function () {
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('toMap another version model', async function () {
+        class AnotherModel {
+            toMap(): { [key: string]: any } {
+                return {};
+            }
+        }
+
+        let m = new AnotherModel();
+        assert.deepStrictEqual($tea.toMap(m), {});
     });
 });
