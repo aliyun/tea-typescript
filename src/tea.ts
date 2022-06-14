@@ -1,11 +1,13 @@
 import * as querystring from 'querystring';
-import { IncomingMessage, IncomingHttpHeaders } from 'http';
+import { IncomingMessage, IncomingHttpHeaders, Agent as HttpAgent } from 'http';
+import { Agent as HttpsAgent } from 'https';
 import { Readable } from 'stream';
 import * as httpx from 'httpx';
 import { parse } from 'url';
 
 type TeaDict = { [key: string]: string };
 type TeaObject = { [key: string]: any };
+type AgentOptions = { keepAlive: boolean };
 
 export class BytesReadable extends Readable {
     value: Buffer
@@ -132,6 +134,20 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
         if (typeof runtime.ca !== 'undefined') {
             options.ca = String(runtime.ca);
         }
+
+        // keepAlive: default true
+        let agentOptions: AgentOptions = {
+            keepAlive: true,
+        };
+        if (typeof runtime.keepAlive !== 'undefined') {
+            agentOptions.keepAlive = runtime.keepAlive;
+        }
+
+        if (request.protocol === 'https') {
+            options.agent = new HttpsAgent(agentOptions);
+        } else {
+            options.agent = new HttpAgent(agentOptions);
+        }
     }
 
     let response = await httpx.request(url, options);
@@ -251,7 +267,7 @@ export function cast<T>(obj: any, t: T): T {
             if (type === 'Readable' ||
                 type === 'map' ||
                 type === 'Buffer' ||
-                type === 'any' || 
+                type === 'any' ||
                 typeof value === type) {
                 (<any>t)[key] = value;
                 return;
@@ -266,7 +282,7 @@ export function cast<T>(obj: any, t: T): T {
                 if (value === 1 || value === 0) {
                     (<any>t)[key] = !!value;
                     return;
-                } 
+                }
                 if (value === 'true' || value === 'false') {
                     (<any>t)[key] = value === 'true';
                     return;
