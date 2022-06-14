@@ -16,6 +16,12 @@ const server = http.createServer((req, res) => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('Hello world!');
         }, 5000);
+    } else if (urlObj.pathname === '/keepAlive') {
+        res.writeHead(200, {
+            'Content-Type': 'text/plain',
+            'Client-Keep-Alive': req.headers.connection
+        });
+        res.end('Hello world!');
     } else if (urlObj.pathname === '/query') {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end(JSON.stringify(urlObj.query));
@@ -275,7 +281,7 @@ describe('$tea', function () {
                         "userId": "DING-EthqiPlOSS6giE",
                         "userName": "朴灵",
                         "meta": meta,
-                        "extra": {info: 'ok'}
+                        "extra": { info: 'ok' }
                     }),
                     new BaseUserResponse({
                         "avatar": "",
@@ -927,6 +933,35 @@ describe('$tea', function () {
         });
         assert.strictEqual(res.statusCode, 200);
         let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+    });
+
+    it('doAction with keepAlive should ok', async function () {
+        let request = new $tea.Request();
+        request.method = 'POST';
+        request.pathname = '/keepAlive';
+        request.port = (server.address() as AddressInfo).port;
+        request.headers['host'] = '127.0.0.1';
+        let res = await $tea.doAction(request);
+        assert.strictEqual(res.statusCode, 200);
+        assert.strictEqual(res.headers['client-keep-alive'], 'keep-alive');
+        let bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+
+        res = await $tea.doAction(request, {
+            keepAlive: true
+        });
+        assert.strictEqual(res.statusCode, 200);
+        assert.strictEqual(res.headers['client-keep-alive'], 'keep-alive');
+        bytes = await res.readBytes();
+        assert.strictEqual(bytes.toString(), 'Hello world!');
+
+        res = await $tea.doAction(request, {
+            keepAlive: false
+        });
+        assert.strictEqual(res.statusCode, 200);
+        assert.strictEqual(res.headers['client-keep-alive'], 'close');
+        bytes = await res.readBytes();
         assert.strictEqual(bytes.toString(), 'Hello world!');
     });
 
