@@ -141,13 +141,14 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
         };
         if (typeof runtime.keepAlive !== 'undefined') {
             agentOptions.keepAlive = runtime.keepAlive;
+            if (request.protocol && request.protocol.toLowerCase() === 'https') {
+                options.agent = new HttpsAgent(agentOptions);
+            } else {
+                options.agent = new HttpAgent(agentOptions);
+            }
         }
 
-        if (request.protocol === 'https') {
-            options.agent = new HttpsAgent(agentOptions);
-        } else {
-            options.agent = new HttpAgent(agentOptions);
-        }
+        
     }
 
     let response = await httpx.request(url, options);
