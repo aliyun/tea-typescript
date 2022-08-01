@@ -629,6 +629,22 @@ describe('$tea', function () {
         assert.strictEqual($tea.allowRetry({
             retryable: true
         }, 1, Date.now()), false);
+        assert.strictEqual($tea.allowRetry({
+            retryable: true,
+            maxAttempts: 'no'
+        }, 1, Date.now()), false);
+        assert.strictEqual($tea.allowRetry({
+            retryable: true,
+            maxAttempts: true
+        }, 1, Date.now()), false);
+        assert.strictEqual($tea.allowRetry({
+            retryable: true,
+            maxAttempts: 1
+        }, 1, Date.now()), true);
+        assert.strictEqual($tea.allowRetry({
+            retryable: true,
+            maxAttempts: 0
+        }, 1, Date.now()), false);
     });
 
     it('getBackoffTime should ok', function () {

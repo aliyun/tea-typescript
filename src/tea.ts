@@ -370,6 +370,10 @@ export function allowRetry(retry: TeaObject, retryTimes: number, startTime: numb
         return Date.now() - startTime < retry.timeout;
     }
 
+    if (retry.maxAttempts && typeof retry.maxAttempts === 'number') {
+        return retry.maxAttempts >= retryTimes;
+    }
+
     // 默认不重试
     return false;
 }
