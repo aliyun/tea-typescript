@@ -97,7 +97,8 @@ describe('$tea', function () {
                         description: '',
                         default_drive_id: '',
                         meta,
-                        extra: info
+                        extra: info,
+                        float_id: '3.1415'
                     },
                     {
                         domain_id: 'sz16',
@@ -178,6 +179,7 @@ describe('$tea', function () {
                 userName?: string
                 meta?: { [key: string]: any }
                 extra?: any
+                floatId: number
                 static names(): { [key: string]: string } {
                     return {
                         avatar: 'avatar',
@@ -197,6 +199,7 @@ describe('$tea', function () {
                         userName: 'user_name',
                         meta: 'meta',
                         extra: 'extra',
+                        floatId: 'float_id',
                     };
                 }
 
@@ -219,6 +222,7 @@ describe('$tea', function () {
                         userName: 'string',
                         meta: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' },
                         extra: 'any',
+                        floatId: 'number',
                     };
                 }
 
@@ -281,7 +285,8 @@ describe('$tea', function () {
                         "userId": "DING-EthqiPlOSS6giE",
                         "userName": "朴灵",
                         "meta": meta,
-                        "extra": { info: 'ok' }
+                        "extra": { info: 'ok' },
+                        "floatId": 3.1415
                     }),
                     new BaseUserResponse({
                         "avatar": "",
@@ -300,7 +305,8 @@ describe('$tea', function () {
                         "userId": "DING-aefgfel",
                         "userName": "普冬",
                         "meta": undefined,
-                        "extra": 'simple'
+                        "extra": 'simple',
+                        "floatId": undefined
                     }),
                     new BaseUserResponse({
                         "avatar": "",
@@ -319,7 +325,8 @@ describe('$tea', function () {
                         "userId": "DING-aefgfesd",
                         "userName": "TS",
                         "meta": undefined,
-                        "extra": 'simple'
+                        "extra": 'simple',
+                        "floatId": undefined
                     })
                 ],
                 "superadmin": new BaseUserResponse({
@@ -862,10 +869,26 @@ describe('$tea', function () {
 
     it("newError should ok", function () {
         let err = $tea.newError({
-            code: "code",
-            message: "message"
+            code: 'code',
+            message: 'message'
         });
         assert.strictEqual(err.message, 'code: message');
+        assert.strictEqual(err.code, 'code');
+        assert.ok(err.statusCode === undefined);
+        assert.ok(err.data === undefined);
+        err = $tea.newError({
+            code: 'code',
+            message: 'message',
+            data: {
+                statusCode: 200,
+                description: 'description'
+            }
+        });
+        assert.strictEqual(err.message, 'code: message');
+        assert.strictEqual(err.code, 'code');
+        assert.strictEqual(err.statusCode, 200);
+        assert.strictEqual(err.data.statusCode, 200);
+        assert.strictEqual(err.data.description, 'description');
     });
 
     it('doAction should ok', async function () {
