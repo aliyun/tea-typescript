@@ -862,10 +862,26 @@ describe('$tea', function () {
 
     it("newError should ok", function () {
         let err = $tea.newError({
-            code: "code",
-            message: "message"
+            code: 'code',
+            message: 'message'
         });
         assert.strictEqual(err.message, 'code: message');
+        assert.strictEqual(err.code, 'code');
+        assert.ok(err.statusCode === undefined);
+        assert.ok(err.data === undefined);
+        err = $tea.newError({
+            code: 'code',
+            message: 'message',
+            data: {
+                statusCode: 200,
+                describtion: 'describtion'
+            }
+        });
+        assert.strictEqual(err.message, 'code: message');
+        assert.strictEqual(err.code, 'code');
+        assert.strictEqual(err.statusCode, 200);
+        assert.strictEqual(err.data.statusCode, 200);
+        assert.strictEqual(err.data.describtion, 'describtion');
     });
 
     it('doAction should ok', async function () {
