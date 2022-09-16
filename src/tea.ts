@@ -148,7 +148,7 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
             }
         }
 
-        
+
     }
 
     let response = await httpx.request(url, options);
@@ -156,9 +156,23 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
     return new Response(response);
 }
 
-export function newError(data: any): Error {
-    let message = `${data.code}: ${data.message}`;
-    return new Error(message);
+class ResponseError extends Error {
+    code: string
+    statusCode: number
+    data: any
+
+    constructor(map: any) {
+        super(`${map.code}: ${map.message}`);
+        this.code = map.code;
+        this.data = map.data;
+        if (this.data && this.data.statusCode) {
+            this.statusCode = Number(this.data.statusCode);
+        }
+    }
+}
+
+export function newError(data: any): ResponseError {
+    return new ResponseError(data);
 }
 
 function getValue(type: any, value: any): any {
