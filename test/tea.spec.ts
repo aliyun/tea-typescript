@@ -7,7 +7,7 @@ import assert from 'assert';
 import { AddressInfo } from 'net';
 import { Readable } from 'stream';
 
-import * as $tea from "../src/tea";
+import * as $tea from '../src/tea';
 
 const server = http.createServer((req, res) => {
     const urlObj = url.parse(req.url, true);
@@ -71,7 +71,7 @@ describe('$tea', function () {
             }
             const testStream = new Readable();
             const meta: { [key: string]: string } = {
-                "habits": "dota"
+                'habits': 'dota'
             };
             const listInfo = new ListInfo(2);
             const typeList = [new TypeInfo('user'), new TypeInfo('admin')];
@@ -269,88 +269,88 @@ describe('$tea', function () {
             assert.deepStrictEqual(response, new ListUserResponse({
                 items: [
                     new BaseUserResponse({
-                        "avatar": "",
-                        "createdAt": 1568773418121,
-                        "defaultDriveId": "",
-                        "description": "",
-                        "domainId": "sz16",
-                        "strong": true,
-                        "email": "",
-                        "nickName": "朴灵",
-                        "phone": "",
-                        "role": "user",
-                        "status": "enabled",
-                        "titles": ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
-                        "updatedAt": 1568773418121,
-                        "userId": "DING-EthqiPlOSS6giE",
-                        "userName": "朴灵",
-                        "meta": meta,
-                        "extra": { info: 'ok' },
-                        "floatId": 3.1415
+                        'avatar': '',
+                        'createdAt': 1568773418121,
+                        'defaultDriveId': '',
+                        'description': '',
+                        'domainId': 'sz16',
+                        'strong': true,
+                        'email': '',
+                        'nickName': '朴灵',
+                        'phone': '',
+                        'role': 'user',
+                        'status': 'enabled',
+                        'titles': ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
+                        'updatedAt': 1568773418121,
+                        'userId': 'DING-EthqiPlOSS6giE',
+                        'userName': '朴灵',
+                        'meta': meta,
+                        'extra': { info: 'ok' },
+                        'floatId': 3.1415
                     }),
                     new BaseUserResponse({
-                        "avatar": "",
-                        "createdAt": 1568732914442,
-                        "defaultDriveId": "",
-                        "description": "",
-                        "domainId": "sz16",
-                        "email": "",
-                        "nickName": "普冬",
-                        "strong": true,
-                        "phone": "",
-                        "role": "user",
-                        "status": "enabled",
-                        "titles": ['高级开发工程师'],
-                        "updatedAt": 0,
-                        "userId": "DING-aefgfel",
-                        "userName": "普冬",
-                        "meta": undefined,
-                        "extra": 'simple',
-                        "floatId": undefined
+                        'avatar': '',
+                        'createdAt': 1568732914442,
+                        'defaultDriveId': '',
+                        'description': '',
+                        'domainId': 'sz16',
+                        'email': '',
+                        'nickName': '普冬',
+                        'strong': true,
+                        'phone': '',
+                        'role': 'user',
+                        'status': 'enabled',
+                        'titles': ['高级开发工程师'],
+                        'updatedAt': 0,
+                        'userId': 'DING-aefgfel',
+                        'userName': '普冬',
+                        'meta': undefined,
+                        'extra': 'simple',
+                        'floatId': undefined
                     }),
                     new BaseUserResponse({
-                        "avatar": "",
-                        "createdAt": 1568732914442,
-                        "defaultDriveId": "",
-                        "description": "",
-                        "domainId": "1234",
-                        "email": "",
-                        "nickName": "test",
-                        "strong": false,
-                        "phone": "",
-                        "role": "user",
-                        "status": "enabled",
-                        "titles": ['测试工程师'],
-                        "updatedAt": 0,
-                        "userId": "DING-aefgfesd",
-                        "userName": "TS",
-                        "meta": undefined,
-                        "extra": 'simple',
-                        "floatId": undefined
+                        'avatar': '',
+                        'createdAt': 1568732914442,
+                        'defaultDriveId': '',
+                        'description': '',
+                        'domainId': '1234',
+                        'email': '',
+                        'nickName': 'test',
+                        'strong': false,
+                        'phone': '',
+                        'role': 'user',
+                        'status': 'enabled',
+                        'titles': ['测试工程师'],
+                        'updatedAt': 0,
+                        'userId': 'DING-aefgfesd',
+                        'userName': 'TS',
+                        'meta': undefined,
+                        'extra': 'simple',
+                        'floatId': undefined
                     })
                 ],
-                "superadmin": new BaseUserResponse({
-                    "avatar": "",
-                    "createdAt": 1568732914502,
-                    "defaultDriveId": "",
-                    "description": "",
-                    "domainId": "sz16",
-                    "email": "",
-                    "nickName": "superadmin",
-                    "strong": false,
-                    "phone": "",
-                    "role": "superadmin",
-                    "status": "enabled",
-                    "titles": ['superadmin'],
-                    "updatedAt": 0,
-                    "userId": "superadmin",
-                    "userName": "superadmin",
-                    "meta": meta
+                'superadmin': new BaseUserResponse({
+                    'avatar': '',
+                    'createdAt': 1568732914502,
+                    'defaultDriveId': '',
+                    'description': '',
+                    'domainId': 'sz16',
+                    'email': '',
+                    'nickName': 'superadmin',
+                    'strong': false,
+                    'phone': '',
+                    'role': 'superadmin',
+                    'status': 'enabled',
+                    'titles': ['superadmin'],
+                    'updatedAt': 0,
+                    'userId': 'superadmin',
+                    'userName': 'superadmin',
+                    'meta': meta
                 }),
-                "stream": testStream,
-                "listInfo": listInfo,
-                "typeList": typeList,
-                "nextMarker": "next marker"
+                'stream': testStream,
+                'listInfo': listInfo,
+                'typeList': typeList,
+                'nextMarker': 'next marker'
             }));
         });
 
@@ -564,24 +564,24 @@ describe('$tea', function () {
         });
     });
 
-    it("retryError should ok", function () {
+    it('retryError should ok', function () {
         let err = $tea.retryError(new $tea.Request(), null);
-        assert.strictEqual(err.name, "RetryError");
+        assert.strictEqual(err.name, 'RetryError');
     });
 
-    it("readable with string should ok", async function () {
+    it('readable with string should ok', async function () {
         let readable = new $tea.BytesReadable('string');
         const buffer = await read(readable);
         assert.strictEqual(buffer.toString(), 'string');
     });
 
-    it("readable with buffer should ok", async function () {
+    it('readable with buffer should ok', async function () {
         let readable = new $tea.BytesReadable(Buffer.from('string'));
         const buffer = await read(readable);
         assert.strictEqual(buffer.toString(), 'string');
     });
 
-    it("isRetryable should ok", function () {
+    it('isRetryable should ok', function () {
         assert.strictEqual($tea.isRetryable(undefined), false);
         assert.strictEqual($tea.isRetryable(null), false);
         assert.strictEqual($tea.isRetryable(new Error('')), false);
@@ -591,7 +591,7 @@ describe('$tea', function () {
 
     it('newUnretryableError should ok', function () {
         let err = $tea.newUnretryableError(new $tea.Request());
-        assert.strictEqual(err.name, "UnretryableError");
+        assert.strictEqual(err.name, 'UnretryableError');
     });
 
     it('allowRetry should ok', function () {
@@ -753,7 +753,7 @@ describe('$tea', function () {
         }, 5), 0);
     });
 
-    it("new Model should ok", function () {
+    it('new Model should ok', function () {
         class SubModel extends $tea.Model {
             status?: number
             bytes?: Readable
@@ -802,21 +802,21 @@ describe('$tea', function () {
 
         let m = new MyModel(null);
         assert.strictEqual(m.avatar, undefined);
-        assert.strictEqual($tea.toMap(m)["avatar"], undefined);
+        assert.strictEqual($tea.toMap(m)['avatar'], undefined);
         assert.strictEqual($tea.toMap(), null);
         assert.strictEqual($tea.toMap(undefined), null);
         assert.strictEqual($tea.toMap(null), null);
 
-        m = new MyModel({ avatar: "avatar url" });
-        assert.strictEqual(m.avatar, "avatar url");
-        assert.strictEqual($tea.toMap(m)["avatar"], "avatar url");
+        m = new MyModel({ avatar: 'avatar url' });
+        assert.strictEqual(m.avatar, 'avatar url');
+        assert.strictEqual($tea.toMap(m)['avatar'], 'avatar url');
 
         m = new MyModel({
-            avatar: "avatar url",
+            avatar: 'avatar url',
             role: ['admin', 'user'],
         });
-        assert.strictEqual($tea.toMap(m)["role"][0], 'admin');
-        assert.strictEqual($tea.toMap(m)["role"][1], 'user');
+        assert.strictEqual($tea.toMap(m)['role'][0], 'admin');
+        assert.strictEqual($tea.toMap(m)['role'][1], 'user');
         const testReadalbe = new $tea.BytesReadable('test');
         m = new MyModel({
             status: new SubModel({
@@ -824,11 +824,11 @@ describe('$tea', function () {
                 bytes: testReadalbe
             })
         });
-        assert.strictEqual($tea.toMap(m)["status"]["status"], 1);
-        assert.strictEqual($tea.toMap(m)["status"]["bytes"], testReadalbe);
+        assert.strictEqual($tea.toMap(m)['status']['status'], 1);
+        assert.strictEqual($tea.toMap(m)['status']['bytes'], testReadalbe);
     });
 
-    it("new Model with wrong type should error", function () {
+    it('new Model with wrong type should error', function () {
         class MyModel extends $tea.Model {
             avatar?: string
             role?: string[]
@@ -852,7 +852,7 @@ describe('$tea', function () {
         }
         assert.throws(function () {
             let m = new MyModel({
-                avatar: "avatar url",
+                avatar: 'avatar url',
                 role: 'admin',
             });
         }, function (err: Error) {
@@ -861,13 +861,13 @@ describe('$tea', function () {
         });
     });
 
-    it("sleep should ok", async function () {
+    it('sleep should ok', async function () {
         let start = Date.now();
         await $tea.sleep(10);
         assert.ok(Date.now() - start >= 10);
     });
 
-    it("newError should ok", function () {
+    it('newError should ok', function () {
         let err = $tea.newError({
             code: 'code',
             message: 'message'
@@ -882,6 +882,13 @@ describe('$tea', function () {
             data: {
                 statusCode: 200,
                 description: 'description'
+            },
+            description: 'error description',
+            accessDeniedDetail: {
+                'AuthAction': 'ram:ListUsers',
+                'AuthPrincipalType': 'SubUser',
+                'PolicyType': 'ResourceGroupLevelIdentityBassdPolicy',
+                'NoPermissionType': 'ImplicitDeny'
             }
         });
         assert.strictEqual(err.message, 'code: message');
@@ -889,6 +896,9 @@ describe('$tea', function () {
         assert.strictEqual(err.statusCode, 200);
         assert.strictEqual(err.data.statusCode, 200);
         assert.strictEqual(err.data.description, 'description');
+        assert.strictEqual(err.description, 'error description');
+        assert.ok(typeof err.accessDeniedDetail === 'object');
+        assert.strictEqual(err.accessDeniedDetail.NoPermissionType, 'ImplicitDeny');
     });
 
     it('doAction should ok', async function () {
