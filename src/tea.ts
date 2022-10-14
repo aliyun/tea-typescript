@@ -160,11 +160,15 @@ class ResponseError extends Error {
     code: string
     statusCode: number
     data: any
+    description: string
+    accessDeniedDetail: any
 
     constructor(map: any) {
         super(`${map.code}: ${map.message}`);
         this.code = map.code;
         this.data = map.data;
+        this.description = map.description;
+        this.accessDeniedDetail = map.accessDeniedDetail;
         if (this.data && this.data.statusCode) {
             this.statusCode = Number(this.data.statusCode);
         }
