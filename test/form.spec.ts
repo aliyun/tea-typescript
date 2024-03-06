@@ -1,7 +1,8 @@
 import * as $dara from '../src/index';
 import 'mocha';
 import assert from 'assert';
-
+import { createReadStream } from 'fs';
+import { join } from 'path';
 import { Readable } from 'stream';
 
 async function read(readable: Readable): Promise<string> {
@@ -27,6 +28,28 @@ describe('$dara form', function () {
         + 'string\r\n'
         + '\r\n'
         + '--boundary--\r\n');
+  });
+
+  it('file field should ok', async function () {
+    const fileStream = createReadStream(join(__dirname, './fixtures/test.json'));
+    const result = await read($dara.Form.toFileForm({
+      stringkey: 'string',
+      filefield: new $dara.FileField({
+        filename: 'fakefilename',
+        contentType: 'application/json',
+        content: fileStream
+      }),
+    }, 'boundary'));
+    assert.deepStrictEqual(result, '--boundary\r\n'
+      + 'Content-Disposition: form-data; name="stringkey"\r\n\r\n'
+      + 'string\r\n'
+      + '--boundary\r\n'
+      + 'Content-Disposition: form-data; name="filefield"; filename="fakefilename"\r\n'
+      + 'Content-Type: application/json\r\n'
+      + '\r\n'
+      + '{"key":"value"}'
+      + '\r\n'
+      + '--boundary--\r\n');
   });
 
   it('toFormString should ok', function () {

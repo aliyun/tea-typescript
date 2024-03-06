@@ -38,6 +38,7 @@
     "httpx": "^2.3.2",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
+    "moment-timezone": "^0.5.45",
     "xml2js": "^0.6.2"
   },
   "files": [

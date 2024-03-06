@@ -1,9 +1,11 @@
 import * as $dara from '../src/index';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import 'mocha';
 import assert from 'assert';
 
 describe('$dara date', function () {
+  moment.tz.setDefault('Asia/Shanghai');
+
   it('init should be okay', () => {
     const date = new $dara.Date('2023-12-31 00:00:00');
     const expectDate = moment('2023-12-31 00:00:00');

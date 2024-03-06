@@ -8,6 +8,7 @@ const stat = util.promisify(fs.stat);
 const read = util.promisify(fs.read);
 const write = util.promisify(fs.write);
 const open = util.promisify(fs.open);
+const close = util.promisify(fs.close);
 export default class TeaFile {
   _path: string
   _stat: fs.Stats
@@ -65,6 +66,14 @@ export default class TeaFile {
     await write(this._fd, data);
     
     this._stat = await stat(this._path);
+    return;
+  }
+
+  async close(): Promise<void> {
+    if(!this._fd) {
+      return;
+    }
+    await close(this._fd);
     return;
   }
 

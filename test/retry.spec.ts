@@ -20,6 +20,22 @@ describe('$dara retry', function () {
     }
   }
 
+  it('init base backoff policy should not okay', function() {
+    try {
+      const err = new $dara.BackoffPolicy({});
+      const context = new $dara.RetryPolicyContext({
+        retriesAttempted: 3,
+        exception: new AErr({
+          code: 'A1Err',
+          message: 'a1 error',
+        })
+      });
+      err.getDelayTime(context);
+    } catch(err) {
+      assert.deepStrictEqual(err.message, 'un-implement')
+    }
+  });
+
   it('shouldRetry should ok', function () {
     let context = new $dara.RetryPolicyContext({
       retriesAttempted: 3,
@@ -45,6 +61,16 @@ describe('$dara retry', function () {
       })
     });
     assert.deepStrictEqual($dara.shouldRetry(option, context), false);
+
+    option = new $dara.RetryOptions({
+      retryable: true,
+    });
+    assert.deepStrictEqual($dara.shouldRetry(option, context), false);
+
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition1]
+    });
     context = new $dara.RetryPolicyContext({
       retriesAttempted: 2,
       exception: new AErr({
@@ -95,8 +121,16 @@ describe('$dara retry', function () {
       })
     });
     assert.deepStrictEqual($dara.shouldRetry(option, context), false);
+
     context = new $dara.RetryPolicyContext({
       retriesAttempted: 2,
+      exception: new BErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      })
+    });
+    assert.deepStrictEqual($dara.shouldRetry(option, context), false);
+    context = new $dara.RetryPolicyContext({
       exception: new BErr({
         code: 'A1Err',
         message: 'b1 error',
@@ -116,10 +150,20 @@ describe('$dara retry', function () {
       retryCondition: [condition]
     });
 
-    const context = new $dara.RetryPolicyContext({
+    let context = new $dara.RetryPolicyContext({
       retriesAttempted: 2,
       exception: new AErr({
         code: 'A1Err',
+        message: 'a1 error',
+      })
+    });
+    
+    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 100);
+
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 2,
+      exception: new BErr({
+        code: 'B1Err',
         message: 'a1 error',
       })
     });
@@ -139,6 +183,13 @@ describe('$dara retry', function () {
     option = new $dara.RetryOptions({
       retryable: true,
       retryCondition: [condition1]
+    });
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 2,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      })
     });
 
     
@@ -162,6 +213,25 @@ describe('$dara retry', function () {
     });
 
     assert.ok($dara.getBackoffDealy(option, context) < 10000);
+
+    const randomPolicy2 = $dara.BackoffPolicy.newBackoffPolicy({
+      policy: 'Random',
+      period: 10000,
+      cap: 10,
+    });
+
+    const condition2Other = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+      backoff: randomPolicy2, 
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition2Other]
+    });
+
+    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 10);
 
 
     let exponentialPolicy = $dara.BackoffPolicy.newBackoffPolicy({
