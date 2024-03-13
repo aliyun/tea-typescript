@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ 1.x ]
+  pull_request:
+    branches: [ 1.x ]
+
+jobs:
+
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest, macos-latest]
+        node-version: [10.x, 12.x, 14.x]
+    name: Node.js ${{ matrix.node-version }} Test on ${{ matrix.operating-system }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - run: npm install
+    - run: npm run ci
+    - name: CodeCov
+      run: bash <(curl -s https://codecov.io/bash) -cF tea-typescript
