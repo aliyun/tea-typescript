@@ -20,6 +20,14 @@ describe('$dara retry', function () {
     }
   }
 
+  class CErr extends $dara.ResponseError {
+
+    constructor(map: { [key: string]: any }) {
+      super(map);
+      this.name = 'BErr';
+    }
+  }
+
   it('init base backoff policy should not okay', function() {
     try {
       const err = new $dara.BackoffPolicy({});
@@ -139,7 +147,7 @@ describe('$dara retry', function () {
     assert.deepStrictEqual($dara.shouldRetry(option, context), false);
   });
 
-  it('getBackoffDealy should ok', async function () {
+  it('getBackoffDelay should ok', async function () {
     const condition = new $dara.RetryCondition({
       maxAttempts: 3,
       exception: ['AErr'],
@@ -158,7 +166,7 @@ describe('$dara retry', function () {
       })
     });
     
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 100);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 100);
 
     context = new $dara.RetryPolicyContext({
       retriesAttempted: 2,
@@ -168,7 +176,7 @@ describe('$dara retry', function () {
       })
     });
     
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 100);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 100);
 
     const fixedPolicy = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'Fixed',
@@ -193,7 +201,7 @@ describe('$dara retry', function () {
     });
 
     
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 1000);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 1000);
 
     const randomPolicy = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'Random',
@@ -212,7 +220,7 @@ describe('$dara retry', function () {
       retryCondition: [condition2]
     });
 
-    assert.ok($dara.getBackoffDealy(option, context) < 10000);
+    assert.ok($dara.getBackoffDelay(option, context) < 10000);
 
     const randomPolicy2 = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'Random',
@@ -231,7 +239,7 @@ describe('$dara retry', function () {
       retryCondition: [condition2Other]
     });
 
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 10);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 10);
 
 
     let exponentialPolicy = $dara.BackoffPolicy.newBackoffPolicy({
@@ -251,7 +259,7 @@ describe('$dara retry', function () {
       retryCondition: [condition3]
     });
 
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 1024);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 1024);
 
     exponentialPolicy = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'Exponential',
@@ -270,7 +278,7 @@ describe('$dara retry', function () {
       retryCondition: [condition4]
     });
 
-    assert.deepStrictEqual($dara.getBackoffDealy(option, context), 10000);
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 10000);
 
     let equalJitterPolicy = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'EqualJitter',
@@ -279,7 +287,7 @@ describe('$dara retry', function () {
     });
 
     const condition5 = new $dara.RetryCondition({
-      maxAttempts: 3,
+      maxAttempts: 2,
       exception: ['AErr'],
       errorCode: ['A1Err'],
       backoff: equalJitterPolicy, 
@@ -288,7 +296,7 @@ describe('$dara retry', function () {
       retryable: true,
       retryCondition: [condition5]
     });
-    let backoffTime = $dara.getBackoffDealy(option, context)
+    let backoffTime = $dara.getBackoffDelay(option, context)
     assert.ok(backoffTime > 512 && backoffTime < 1024);
 
     equalJitterPolicy = $dara.BackoffPolicy.newBackoffPolicy({
@@ -307,7 +315,7 @@ describe('$dara retry', function () {
       retryable: true,
       retryCondition: [condition6]
     });
-    backoffTime = $dara.getBackoffDealy(option, context)
+    backoffTime = $dara.getBackoffDelay(option, context)
     assert.ok(backoffTime > 5000 && backoffTime < 10000);
 
 
@@ -318,7 +326,7 @@ describe('$dara retry', function () {
     });
 
     const condition7 = new $dara.RetryCondition({
-      maxAttempts: 3,
+      maxAttempts: 2,
       exception: ['AErr'],
       errorCode: ['A1Err'],
       backoff: fullJitterPolicy, 
@@ -327,7 +335,7 @@ describe('$dara retry', function () {
       retryable: true,
       retryCondition: [condition7]
     });
-    backoffTime = $dara.getBackoffDealy(option, context)
+    backoffTime = $dara.getBackoffDelay(option, context)
     assert.ok(backoffTime >= 0 && backoffTime < 1024);
 
     fullJitterPolicy = $dara.BackoffPolicy.newBackoffPolicy({
@@ -346,7 +354,83 @@ describe('$dara retry', function () {
       retryable: true,
       retryCondition: [condition8]
     });
-    backoffTime = $dara.getBackoffDealy(option, context)
+    backoffTime = $dara.getBackoffDelay(option, context)
     assert.ok(backoffTime >= 0 && backoffTime < 10000);
+
+    const condition9 = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+      backoff: fullJitterPolicy, 
+      maxDelay: 1000,
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition9]
+    });
+    backoffTime = $dara.getBackoffDelay(option, context)
+    assert.ok(backoffTime >= 0 && backoffTime <= 1000);
+
+
+    fullJitterPolicy = $dara.BackoffPolicy.newBackoffPolicy({
+      policy: 'ExponentialWithFullJitter',
+      period: 100,
+      cap: 10000 * 10000,
+    });
+
+    const condition12 = new $dara.RetryCondition({
+      maxAttempts: 2,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+      backoff: fullJitterPolicy,
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition12]
+    });
+    backoffTime = $dara.getBackoffDelay(option, context);
+    assert.ok(backoffTime >= 0 && backoffTime <= 120 * 1000);
+
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 2,
+      exception: new CErr({
+        code: 'CErr',
+        message: 'c error',
+        retryAfter: 3000
+      })
+    });
+    const condition10 = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['CErr'],
+      errorCode: ['CErr'],
+      backoff: fullJitterPolicy, 
+      maxDelay: 5000,
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition10]
+    });
+    backoffTime = $dara.getBackoffDelay(option, context)
+    assert.strictEqual(backoffTime, 3000);
+
+    const condition11 = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['CErr'],
+      errorCode: ['CErr'],
+      backoff: fullJitterPolicy, 
+      maxDelay: 1000,
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [condition11]
+    });
+    backoffTime = $dara.getBackoffDelay(option, context)
+    assert.strictEqual(backoffTime, 1000);
+
+  
+    
   });
+
+
+  
 });
