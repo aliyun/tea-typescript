@@ -1,5 +1,7 @@
 import * as $core from './core';
 import * as $error from './error';
+const MAX_DELAY_TIME = 120 * 1000;
+const MIN_DELAY_TIME = 100;
 export class BackoffPolicy{
   policy: string;
   constructor(option: {[key: string]: any}) {
@@ -116,11 +118,13 @@ export class RetryCondition {
   backoff: BackoffPolicy;
   exception: string[];
   errorCode: string[];
+  maxDelay: number;
   constructor(condition: {[key: string]: any}) {
     this.maxAttempts = condition.maxAttempts;
     this.backoff = condition.backoff && BackoffPolicy.newBackoffPolicy(condition.backoff);
     this.exception = condition.exception;
     this.errorCode = condition.errorCode;
+    this.maxDelay = condition.maxDelay;
   }
 }
 
@@ -146,7 +150,7 @@ export class RetryPolicyContext {
   retriesAttempted: number;
   httpRequest: $core.Request;
   httpResponse: $core.Response;
-  exception: $error.BaseError;
+  exception: $error.ResponseError | $error.BaseError;
   constructor(options: {[key: string]: any}) {
     this.key = options.key;
     this.retriesAttempted = options.retriesAttempted || 0;
@@ -183,7 +187,7 @@ export function shouldRetry(options: RetryOptions, ctx: RetryPolicyContext): boo
   return false;
 }
 
-export function getBackoffDealy(options: RetryOptions, ctx: RetryPolicyContext): number {
+export function getBackoffDelay(options: RetryOptions, ctx: RetryPolicyContext): number {
   const ex = ctx.exception;
   const conditions = options.retryCondition;
   for(let i = 0; i < conditions.length; i++) {
@@ -191,10 +195,16 @@ export function getBackoffDealy(options: RetryOptions, ctx: RetryPolicyContext):
     if(!condition.exception.includes(ex.name) && !condition.errorCode.includes(ex.code)) {
       continue;
     }
-    if(!condition.backoff) {
-      return 100;
+    const maxDelay = condition.maxDelay || MAX_DELAY_TIME;
+    const retryAfter = (ctx.exception as $error.ResponseError).retryAfter;
+    if(retryAfter !== undefined) {
+      return Math.min(retryAfter, maxDelay);
     }
-    return condition.backoff.getDelayTime(ctx);
+
+    if(!condition.backoff) {
+      return MIN_DELAY_TIME;
+    }
+    return Math.min(condition.backoff.getDelayTime(ctx), maxDelay);
   }
-  return 100;
+  return MIN_DELAY_TIME;
 }
