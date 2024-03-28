@@ -14,9 +14,10 @@ export class BaseError extends Error {
   }
 }
 
-class ResponseError extends BaseError {
+export class ResponseError extends BaseError {
   code: string
   statusCode: number
+  retryAfter: number
   data: any
   description: string
   accessDeniedDetail: any
@@ -26,6 +27,7 @@ class ResponseError extends BaseError {
     this.name = 'ResponseError';
     this.data = map.data;
     this.description = map.description;
+    this.retryAfter = map.retryAfter;
     this.accessDeniedDetail = map.accessDeniedDetail;
     if (this.data && this.data.statusCode) {
       this.statusCode = Number(this.data.statusCode);
