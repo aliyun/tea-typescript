@@ -1,12 +1,19 @@
-import { Readable, Writable } from 'stream';
-import { IncomingMessage } from 'http';
-import { readAsSSE } from 'httpx';
+import { Readable } from 'stream';
 
 const DATA_PREFIX = 'data:';
 const EVENT_PREFIX = 'event:';
 const ID_PREFIX = 'id:';
 const RETRY_PREFIX = 'retry:';
 
+function isDigitsOnly(str: string) {
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charAt(i);
+    if (c < '0' || c > '9') {
+      return false;
+    }
+  }
+  return str.length > 0;
+}
 
 export class SSEEvent {
   data?: string;
@@ -14,7 +21,7 @@ export class SSEEvent {
   event?: string;
   retry?: number;
 
-  constructor(data: {[key: string]: any} = {}){
+  constructor(data: { [key: string]: any } = {}) {
     this.data = data.data;
     this.id = data.id;
     this.event = data.event;
@@ -25,8 +32,8 @@ export class SSEEvent {
 
 function read(readable: Readable): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    let onData: { (chunk: any): void; (buf: Buffer): void; (chunk: any): void; }, 
-      onError: { (err: Error): void; (err: Error): void; (err: Error): void; }, 
+    let onData: { (chunk: any): void; (buf: Buffer): void; (chunk: any): void; },
+      onError: { (err: Error): void; (err: Error): void; (err: Error): void; },
       onEnd: { (): void; (): void; (): void; };
     const cleanup = function () {
       // cleanup
@@ -34,25 +41,25 @@ function read(readable: Readable): Promise<Buffer> {
       readable.removeListener('data', onData);
       readable.removeListener('end', onEnd);
     };
-  
+
     const bufs: Uint8Array[] | Buffer[] = [];
     let size = 0;
-  
+
     onData = function (buf: Buffer) {
       bufs.push(buf);
       size += buf.length;
     };
-  
+
     onError = function (err: Error) {
       cleanup();
       reject(err);
     };
-  
+
     onEnd = function () {
       cleanup();
       resolve(Buffer.concat(bufs, size));
     };
-  
+
     readable.on('error', onError);
     readable.on('data', onData);
     readable.on('end', onEnd);
@@ -63,8 +70,8 @@ function read(readable: Readable): Promise<Buffer> {
 
 function readyToRead(readable: Readable) {
   return new Promise((resolve, reject) => {
-    let onReadable: { (): void; (): void; (): void; }, 
-      onEnd: { (): void; (): void; (): void; }, 
+    let onReadable: { (): void; (): void; (): void; },
+      onEnd: { (): void; (): void; (): void; },
       onError: { (err: Error): void; (err: any): void; (err: Error): void; };
     const cleanup = function () {
       // cleanup
@@ -119,7 +126,9 @@ function tryGetEvents(head: string, chunk: string): EventResult {
           event.id = line.substring(ID_PREFIX.length).trim();
         } else if (line.startsWith(RETRY_PREFIX)) {
           const retry = line.substring(RETRY_PREFIX.length).trim();
-          event.retry = parseInt(retry, 10);
+          if (isDigitsOnly(retry)) {
+            event.retry = parseInt(retry, 10);
+          }
         } else if (line.startsWith(':')) {
           // ignore the line
         }
@@ -130,7 +139,7 @@ function tryGetEvents(head: string, chunk: string): EventResult {
   }
 
   const remain = all.substring(start);
-  return { events, remain } ;
+  return { events, remain };
 }
 
 
@@ -151,16 +160,16 @@ export default class TeaStream {
   }
 
   static async *readAsSSE(stream: Readable): AsyncGenerator<SSEEvent> {
+    let rest = '';
     while (true) {
       const ended = await readyToRead(stream);
       if (ended) {
         return;
       }
-  
-      let rest = '';
+
       let chunk;
       while (null !== (chunk = stream.read())) {
-        const  { events, remain } = tryGetEvents(rest, chunk.toString());
+        const { events, remain } = tryGetEvents(rest, chunk.toString());
         rest = remain;
         if (events && events.length > 0) {
           for (const event of events) {
