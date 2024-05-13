@@ -5,7 +5,7 @@ import url from 'url';
 import 'mocha';
 import assert from 'assert';
 import { AddressInfo } from 'net';
-import { Readable } from 'stream';
+import { Readable, Writable } from 'stream';
 
 import * as $dara from '../src/index';
 
@@ -70,6 +70,7 @@ describe('$dara', function () {
         }
       }
       const testStream = new Readable();
+      const testWStream = new Writable();
       const meta: { [key: string]: string } = {
         'habits': 'dota'
       };
@@ -82,41 +83,42 @@ describe('$dara', function () {
         items: [
           {
             domain_id: 'sz16',
-            user_id: 'DING-EthqiPlOSS6giE',
+            user_id: 'DING-EthqxxiPlOSS6gxxixxE',
             avatar: '',
             created_at: 1568773418121,
             updated_at: 1568773418121,
             email: '',
-            nick_name: '朴灵',
+            nick_name: '朴X',
             strong: 'true',
             phone: '',
             role: 'user',
             status: 'enabled',
-            titles: ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
-            user_name: '朴灵',
+            titles: ['Node.js官方认证开发者', '深入浅出Node.js作者'],
+            user_name: '朴X',
             description: '',
             default_drive_id: '',
             meta,
             extra: info,
+            file: testWStream,
             float_id: '3.1415'
           },
           {
             domain_id: 'sz16',
-            user_id: 'DING-aefgfel',
+            user_id: 'DING-aexxfgfelxx',
             avatar: '',
             created_at: 1568732914442,
             updated_at: 0,
             email: '',
-            nick_name: '普冬',
+            nick_name: '普X',
             strong: 1,
             phone: '',
             role: 'user',
             status: 'enabled',
-            titles: ['高级开发工程师'],
-            user_name: '普冬',
+            titles: ['写代码的'],
+            user_name: '普X',
             description: '',
             default_drive_id: '',
-            extra: 'simple'
+            extra: 'simple',
           },
           {
             domain_id: 1234,
@@ -134,7 +136,7 @@ describe('$dara', function () {
             user_name: 'TS',
             description: '',
             default_drive_id: '',
-            extra: 'simple'
+            extra: 'simple',
           }
         ],
         superadmin: {
@@ -178,6 +180,7 @@ describe('$dara', function () {
         userId?: string
         userName?: string
         meta?: { [key: string]: any }
+        file: Writable
         extra?: any
         floatId: number
         static names(): { [key: string]: string } {
@@ -199,6 +202,7 @@ describe('$dara', function () {
             userName: 'user_name',
             meta: 'meta',
             extra: 'extra',
+            file: 'file',
             floatId: 'float_id',
           };
         }
@@ -222,6 +226,7 @@ describe('$dara', function () {
             userName: 'string',
             meta: { 'type': 'map', 'keyType': 'string', 'valueType': 'any' },
             extra: 'any',
+            file: 'Writable',
             floatId: 'number',
           };
         }
@@ -276,16 +281,17 @@ describe('$dara', function () {
             'domainId': 'sz16',
             'strong': true,
             'email': '',
-            'nickName': '朴灵',
+            'nickName': '朴X',
             'phone': '',
             'role': 'user',
             'status': 'enabled',
-            'titles': ['高级技术专家', 'Node.js官方认证开发者', '深入浅出Node.js作者'],
+            'titles': [ 'Node.js官方认证开发者', '深入浅出Node.js作者'],
             'updatedAt': 1568773418121,
-            'userId': 'DING-EthqiPlOSS6giE',
-            'userName': '朴灵',
+            'userId': 'DING-EthqxxiPlOSS6gxxixxE',
+            'userName': '朴X',
             'meta': meta,
             'extra': { info: 'ok' },
+            'file': testWStream, 
             'floatId': 3.1415
           }),
           new BaseUserResponse({
@@ -295,15 +301,15 @@ describe('$dara', function () {
             'description': '',
             'domainId': 'sz16',
             'email': '',
-            'nickName': '普冬',
+            'nickName': '普X',
             'strong': true,
             'phone': '',
             'role': 'user',
             'status': 'enabled',
-            'titles': ['高级开发工程师'],
+            'titles': ['写代码的'],
             'updatedAt': 0,
-            'userId': 'DING-aefgfel',
-            'userName': '普冬',
+            'userId': 'DING-aexxfgfelxx',
+            'userName': '普X',
             'meta': undefined,
             'extra': 'simple',
             'floatId': undefined
@@ -436,8 +442,8 @@ describe('$dara', function () {
           name: ['123'],
           age: 21,
           strong: true,
-          title: ['高级开发工程师'],
-          metaInfo: new MetaInfo('开放平台')
+          title: ['写代码的'],
+          metaInfo: new MetaInfo('平台')
         }
         $dara.cast(data, new UserInfoResponse({}))
       }, function (err: Error) {
@@ -447,11 +453,11 @@ describe('$dara', function () {
 
       assert.throws(function () {
         const data = {
-          name: '普冬',
+          name: '普X',
           age: 21,
           strong: true,
-          title: '高级开发工程师',
-          metaInfo: new MetaInfo('开放平台')
+          title: '写代码的',
+          metaInfo: new MetaInfo('平台')
         }
         $dara.cast(data, new UserInfoResponse({}));
       }, function (err: Error) {
@@ -461,11 +467,11 @@ describe('$dara', function () {
 
       assert.throws(function () {
         const data = {
-          name: '普冬',
+          name: '普X',
           age: '21a',
           strong: true,
-          title: ['高级开发工程师'],
-          metaInfo: new MetaInfo('开放平台')
+          title: ['写代码的'],
+          metaInfo: new MetaInfo('平台')
         }
         $dara.cast(data, new UserInfoResponse({}))
       }, function (err: Error) {
@@ -475,11 +481,11 @@ describe('$dara', function () {
 
       assert.throws(function () {
         const data = {
-          name: '普冬',
+          name: '普X',
           age: 21,
           strong: 'ture',
-          title: ['高级开发工程师'],
-          metaInfo: new MetaInfo('开放平台')
+          title: ['写代码的'],
+          metaInfo: new MetaInfo('平台')
         }
         $dara.cast(data, new UserInfoResponse({}))
       }, function (err: Error) {
@@ -489,11 +495,11 @@ describe('$dara', function () {
 
       assert.throws(function () {
         const data = {
-          name: '普冬',
+          name: '普X',
           age: 21,
           strong: true,
-          title: ['高级开发工程师'],
-          metaInfo: '开放平台'
+          title: ['写代码的'],
+          metaInfo: '平台'
         }
         $dara.cast(data, new UserInfoResponse({}))
       }, function (err: Error) {
@@ -752,17 +758,20 @@ describe('$dara', function () {
     class SubModel extends $dara.Model {
       status?: number
       bytes?: Readable
+      file?: Writable
       static names(): { [key: string]: string } {
         return {
           status: 'status',
-          bytes: 'bytes'
+          bytes: 'bytes',
+          file: 'file',
         };
       }
 
       static types(): { [key: string]: any } {
         return {
           status: 'number',
-          bytes: 'Readable'
+          bytes: 'Readable',
+          file: 'Writable'
         };
       }
 
@@ -813,14 +822,21 @@ describe('$dara', function () {
     assert.strictEqual($dara.toMap(m)['role'][0], 'admin');
     assert.strictEqual($dara.toMap(m)['role'][1], 'user');
     const testReadalbe = new $dara.BytesReadable('test');
+    const testWritable = new Writable();
     m = new MyModel({
       status: new SubModel({
         status: 1,
-        bytes: testReadalbe
+        bytes: testReadalbe,
+        file: testWritable,
       })
     });
     assert.strictEqual($dara.toMap(m)['status']['status'], 1);
     assert.strictEqual($dara.toMap(m)['status']['bytes'], testReadalbe);
+    assert.strictEqual($dara.toMap(m)['status']['file'], testWritable);
+
+    assert.strictEqual($dara.toMap(m, true)['status']['status'], 1);
+    assert.strictEqual($dara.toMap(m, true)['status']['bytes'], null);
+    assert.strictEqual($dara.toMap(m, true)['status']['file'], null);
   });
 
   it('new Model with wrong type should error', function () {
@@ -852,6 +868,282 @@ describe('$dara', function () {
       });
     }, function (err: Error) {
       assert.strictEqual(err.message, 'expect: array, actual: string');
+      return true;
+    });
+  });
+
+  it('Model function should ok', async function () {
+    class SubModel extends $dara.Model {
+      status: number
+      bytes?: Readable
+      file?: Writable
+
+      validate() {
+        $dara.Model.validateRequired('status', this.status);
+        $dara.Model.validateMaximum('status', this.status, 300);
+        $dara.Model.validateMinimum('status', this.status, 100);
+      }
+
+      static names(): { [key: string]: string } {
+        return {
+          status: 'status',
+          bytes: 'bytes',
+          file: 'file',
+        };
+      }
+
+      static types(): { [key: string]: any } {
+        return {
+          status: 'number',
+          bytes: 'Readable',
+          file: 'Writable'
+        };
+      }
+
+      constructor(map: { [key: string]: any }) {
+        super(map);
+      }
+    }
+    class MyModel extends $dara.Model {
+      avatar?: string
+      role?: string[]
+      status: SubModel
+      static names(): { [key: string]: string } {
+        return {
+          avatar: 'avatar',
+          status: 'status',
+          role: 'role',
+        };
+      }
+
+      static types(): { [key: string]: any } {
+        return {
+          avatar: 'string',
+          status: SubModel,
+          role: { type: 'array', itemType: 'string' }
+        };
+      }
+
+      validate() {
+        $dara.Model.validateRequired('status', this.status)
+        $dara.Model.validateMaxLength('role', this.role, 5);
+        $dara.Model.validateMinLength('role', this.role, 1);
+        $dara.Model.validatePattern("avatar", this.avatar, "^https://");
+        super.validate();
+      }
+
+      constructor(map: { [key: string]: any }) {
+        super(map);
+      }
+    }
+
+    const testReadalbe = new $dara.BytesReadable('test');
+    const testWritable = new Writable();
+    let m = new MyModel({
+      avatar: 'https://avatarurl.com/path',
+      role: ['admin', 'user'],
+      status: new SubModel({
+        status: 101,
+        bytes: testReadalbe,
+        file: testWritable,
+      })
+    });
+    assert.doesNotThrow(m.validate.bind(m), $dara.BaseError);
+    assert.deepStrictEqual(m.copyWithoutStream().toMap(), {
+      avatar: 'https://avatarurl.com/path',
+      role: ['admin', 'user'],
+      status: {
+        status: 101,
+      }
+    });
+
+    assert.throws(function () {
+      const m = new MyModel({
+        avatar: 'avatarurl',
+        status: new SubModel({
+          status: 101,
+        })
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: avatar is not match ^https://.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const m = new MyModel({
+        role: [],
+        status: new SubModel({
+          status: 101,
+        })
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: role is exceed min-length: 1.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const m = new MyModel({
+        avatar: 'https://avatarurl.com/path',
+        role: ['a', 'b', 'c', 'd', 'e', 'f'],
+        status: new SubModel({
+          status: 101,
+          bytes: testReadalbe,
+          file: testWritable,
+        })
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: role is exceed max-length: 5.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const m = new SubModel({
+        status: 99,
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: status cannot be less than 100.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const m = new SubModel({
+        status: 301,
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: status cannot be greater than 300.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const m = new SubModel({
+        bytes: testReadalbe,
+        file: testWritable,
+      });
+      m.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: status is required.');
+      return true;
+    });
+
+    class ComplexModel extends $dara.Model {
+      modelArr?: MyModel[][]
+      modelMap?: { [key: string]: SubModel[] }
+      modelMapArr?: { [key: string]: SubModel }[]
+      static names(): { [key: string]: string } {
+        return {
+          modelArr: 'modelArr',
+          modelMap: 'modelMap',
+          modelMapArr: 'modelMapArr',
+        };
+      }
+
+      static types(): { [key: string]: any } {
+        return {
+          modelArr: { type: 'array', itemType: { type: 'array', itemType: MyModel } },
+          modelMap: { type: 'map',  'keyType': 'string', 'valueType': { type: 'array', itemType: SubModel } },
+          modelMapArr: { type: 'array', itemType: { type: 'map',  'keyType': 'string', 'valueType': SubModel } },
+        };
+      }
+
+      validate() {
+        if(Array.isArray(this.modelArr)) {
+          $dara.Model.validateArray(this.modelArr);
+        }
+        if(this.modelMap) {
+          $dara.Model.validateMap(this.modelMap);
+        }
+        if(Array.isArray(this.modelMapArr)) {
+          $dara.Model.validateArray(this.modelMapArr);
+        }
+        super.validate();
+      }
+    }
+    m = new MyModel({
+      avatar: 'https://avatarurl.com/path',
+      role: ['admin', 'user'],
+      status: new SubModel({
+        status: 101,
+        bytes: testReadalbe,
+        file: testWritable,
+      })
+    });
+    let subM = new SubModel({
+      status: 101,
+      bytes: testReadalbe,
+      file: testWritable,
+    });
+    let cm = new ComplexModel({
+      modelArr: [[m]],
+      modelMap: {
+        key: [subM],
+        key1: undefined,
+      },
+      modelMapArr: [null]
+    });
+    assert.doesNotThrow(cm.validate.bind(cm), $dara.BaseError);
+
+    assert.throws(function () {
+      const m = new MyModel({
+        avatar: 'avatarurl',
+        status: new SubModel({
+          status: 101,
+        })
+      });
+      const subM = new SubModel({
+        status: 101,
+        bytes: testReadalbe,
+        file: testWritable,
+      });
+      const cm = new ComplexModel({
+        modelArr: [[m]],
+        modelMap: {
+          key: [subM],
+          key1: undefined,
+        },
+        modelMapArr: []
+      });
+      cm.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: avatar is not match ^https://.');
+      return true;
+    });
+
+
+    assert.throws(function () {
+      const subM = new SubModel({
+        status: 301,
+      });
+      const cm = new ComplexModel({
+        modelMap: {
+          key: [subM],
+          key1: undefined,
+        },
+        modelMapArr: []
+      });
+      cm.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: status cannot be greater than 300.');
+      return true;
+    });
+
+    assert.throws(function () {
+      const subM = new SubModel({
+        bytes: testReadalbe,
+        file: testWritable,
+      });
+      const cm = new ComplexModel({
+        modelMapArr: [{
+          key: subM
+        }]
+      });
+      cm.validate();
+    }, function (err: $dara.BaseError) {
+      assert.strictEqual(err.message, 'SDK.ValidateError: status is required.');
       return true;
     });
   });

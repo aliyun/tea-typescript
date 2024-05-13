@@ -31,7 +31,7 @@ export class ResponseError extends BaseError {
     this.accessDeniedDetail = map.accessDeniedDetail;
     if (this.data && this.data.statusCode) {
       this.statusCode = Number(this.data.statusCode);
-    }
+    } 
   }
 }
 
