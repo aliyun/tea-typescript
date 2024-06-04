@@ -18,6 +18,10 @@ export default class TeaDate {
     return this.date.unix();
   }
 
+  UTC(): string {
+    return this.date.clone().utc().format();
+  }
+
   sub(amount: moment.unitOfTime.Base, unit: number): TeaDate {
     const date = moment(this.date).subtract(unit, amount);
     return new TeaDate(date);
@@ -62,7 +66,7 @@ export default class TeaDate {
       // sunday
       return 7;
     }
-    return weekday + 1;
+    return weekday;
   }
 
   weekOfMonth(): number {

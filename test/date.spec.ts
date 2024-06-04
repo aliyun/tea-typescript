@@ -16,6 +16,7 @@ describe('$dara date', function () {
     const date = new $dara.Date('2023-12-31 00:00:00.916000 +0800 UTC');
     assert.strictEqual(date.format("YYYY-MM-DD HH:mm:ss"), '2023-12-31 08:00:00');
     assert.strictEqual(date.unix(), 1703980800);
+    assert.strictEqual(date.UTC(), '2023-12-31T00:00:00Z');
     const yesterday = date.sub("day", 1);
     assert.strictEqual(yesterday.format("YYYY-MM-DD HH:mm:ss"), '2023-12-30 08:00:00');
     assert.strictEqual(date.diff("day", yesterday), 1);
@@ -26,6 +27,8 @@ describe('$dara date', function () {
     assert.strictEqual(date.second(), 0);
     assert.strictEqual(date.dayOfMonth(), 31);
     assert.strictEqual(date.dayOfWeek(), 7);
+    const yesterday1 = date.sub("day", 1);
+    assert.strictEqual(yesterday1.dayOfWeek(), 6);
     assert.strictEqual(date.weekOfMonth(), 5);
     assert.strictEqual(tomorrow.weekOfMonth(), 1);
     assert.strictEqual(yesterday.weekOfMonth(), 5);
