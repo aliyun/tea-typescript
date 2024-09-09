@@ -12,7 +12,6 @@
   "scripts": {
     "test": "mocha -r ts-node/register -r source-map-support/register test/**/*.spec.ts --timeout=10000",
     "test-cov": "nyc -e .ts -r=html -r=text -r=lcov npm run test",
-    "ci": "npm run test-cov && codecov",
     "build": "tsc",
     "prepublishOnly": "tsc",
     "lint": "eslint . --ext .ts",
@@ -26,7 +25,6 @@
     "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
-    "codecov": "^3.6.1",
     "eslint": "^8.57.0",
     "mocha": "^6.2.0",
     "nyc": "^14.1.1",
