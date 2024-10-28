@@ -19,7 +19,7 @@ describe('$dara error', function () {
   });
 
   it('newUnretryableError should ok', function () {
-    const err = $dara.newUnretryableError(new $dara.Request());
+    const err = $dara.newUnretryableError(new $dara.RetryPolicyContext({}));
     assert.strictEqual(err.name, 'UnretryableError');
   });
 
