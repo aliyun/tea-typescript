@@ -51,6 +51,11 @@ describe('$dara retry', function () {
     assert.deepStrictEqual($dara.shouldRetry(undefined, context), false);
     assert.deepStrictEqual($dara.shouldRetry(null, context), false);
 
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 0,
+    });
+    assert.deepStrictEqual($dara.shouldRetry(undefined, context), true);
+
     const condition1 = new $dara.RetryCondition({
       maxAttempts: 3,
       exception: ['AErr'],
@@ -139,6 +144,7 @@ describe('$dara retry', function () {
     });
     assert.deepStrictEqual($dara.shouldRetry(option, context), false);
     context = new $dara.RetryPolicyContext({
+      retriesAttempted: 1,
       exception: new BErr({
         code: 'A1Err',
         message: 'b1 error',

@@ -161,6 +161,9 @@ export class RetryPolicyContext {
 }
 
 export function shouldRetry(options: RetryOptions, ctx: RetryPolicyContext): boolean {
+  if(ctx.retriesAttempted === 0) {
+    return true;
+  }
   if(!options || !options.retryable) {
     return false;
   }

@@ -1,6 +1,7 @@
 
 
 import { Request, Response } from './core';
+import { RetryPolicyContext } from './retry';
 
 export class BaseError extends Error {
   name: string;
@@ -70,10 +71,19 @@ export function newError(data: any): ResponseError {
   return new ResponseError(data);
 }
 
-export function newUnretryableError(request: Request): Error {
-  const e = new UnretryableError('');
-  e.data = {
-    lastRequest: request
-  };
-  return e;
+export function newUnretryableError(ctx: RetryPolicyContext | Request): Error {
+  if(ctx instanceof RetryPolicyContext) {
+    const message = ctx.exception ? ctx.exception.message : '';
+    const e = new UnretryableError(message);
+    e.data = {
+      lastRequest: ctx.httpRequest
+    };
+    return e;
+  } else {
+    const e = new UnretryableError('');
+    e.data = {
+      lastRequest: ctx
+    };
+    return e;
+  }
 }
