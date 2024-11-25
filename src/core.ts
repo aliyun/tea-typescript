@@ -390,6 +390,28 @@ export class FileField extends Model {
   }
 }
 
+export class ExtendsParameters extends Model {
+  headers?: { [key: string]: string };
+  queries?: { [key: string]: string };
+  static names(): { [key: string]: string } {
+    return {
+      headers: 'headers',
+      queries: 'queries',
+    };
+  }
+
+  static types(): { [key: string]: any } {
+    return {
+      headers: { 'type': 'map', 'keyType': 'string', 'valueType': 'string' },
+      queries: { 'type': 'map', 'keyType': 'string', 'valueType': 'string' },
+    };
+  }
+
+  constructor(map?: { [key: string]: any }) {
+    super(map);
+  }
+}
+
 export class RuntimeOptions extends Model {
   retryOptions?: RetryOptions;
   autoretry?: boolean;
@@ -407,9 +429,9 @@ export class RuntimeOptions extends Model {
   noProxy?: string;
   maxIdleConns?: number;
   keepAlive?: boolean;
+  extendsParameters?: ExtendsParameters;
   static names(): { [key: string]: string } {
     return {
-      retryOptions: 'retryOptions',
       autoretry: 'autoretry',
       ignoreSSL: 'ignoreSSL',
       key: 'key',
@@ -425,6 +447,7 @@ export class RuntimeOptions extends Model {
       noProxy: 'noProxy',
       maxIdleConns: 'maxIdleConns',
       keepAlive: 'keepAlive',
+      extendsParameters: 'extendsParameters',
     };
   }
 
@@ -446,6 +469,7 @@ export class RuntimeOptions extends Model {
       noProxy: 'string',
       maxIdleConns: 'number',
       keepAlive: 'boolean',
+      extendsParameters: ExtendsParameters,
     };
   }
 
