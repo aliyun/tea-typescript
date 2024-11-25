@@ -6,7 +6,6 @@ import { RetryPolicyContext } from './retry';
 export class BaseError extends Error {
   name: string;
   code: string;
-  message: string;
 
   constructor(map: { [key: string]: any }) {
     super(`${map.code}: ${map.message}`);
@@ -72,13 +71,8 @@ export function newError(data: any): ResponseError {
 }
 
 export function newUnretryableError(ctx: RetryPolicyContext | Request): Error {
-  if(ctx instanceof RetryPolicyContext) {
-    const message = ctx.exception ? ctx.exception.message : '';
-    const e = new UnretryableError(message);
-    e.data = {
-      lastRequest: ctx.httpRequest
-    };
-    return e;
+  if(ctx instanceof RetryPolicyContext && ctx.exception) {
+    return ctx.exception;
   } else {
     const e = new UnretryableError('');
     e.data = {

@@ -5,6 +5,6 @@ export { default as File } from './file';
 export { default as Form, FileFormStream } from './form';
 export * from './func';
 export * from './retry';
-export { default as Stream } from './stream';
+export { default as Stream, SSEEvent } from './stream';
 export { default as URL } from './url';
 export { default as XML } from './xml';
