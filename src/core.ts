@@ -6,6 +6,7 @@ import * as httpx from 'httpx';
 import { parse } from 'url';
 import { RetryOptions } from './retry';
 import { BaseError } from './error';
+import * as $tea from '@alicloud/tea-typescript';
 
 type TeaDict = { [key: string]: string };
 type TeaObject = { [key: string]: any };
@@ -212,10 +213,11 @@ export function toMap(value: any = undefined, withoutStream: boolean = false): a
   return value;
 }
 
-export class Model {
+export class Model extends $tea.Model {
   [key: string]: any
 
   constructor(map?: TeaObject) {
+    super();
     if (map == null) {
       return;
     }
@@ -390,7 +392,7 @@ export class FileField extends Model {
   }
 }
 
-export class ExtendsParameters extends Model {
+export class ExtendsParameters extends $tea.Model {
   headers?: { [key: string]: string };
   queries?: { [key: string]: string };
   static names(): { [key: string]: string } {
@@ -412,7 +414,7 @@ export class ExtendsParameters extends Model {
   }
 }
 
-export class RuntimeOptions extends Model {
+export class RuntimeOptions extends $tea.Model {
   retryOptions?: RetryOptions;
   autoretry?: boolean;
   ignoreSSL?: boolean;

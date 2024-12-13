@@ -37,6 +37,7 @@
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.45",
+    "@alicloud/tea-typescript": "^1.5.1",
     "xml2js": "^0.6.2"
   },
   "files": [
