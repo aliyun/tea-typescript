@@ -16,11 +16,11 @@ export class BaseError extends Error {
 
 export class ResponseError extends BaseError {
   code: string
-  statusCode: number
-  retryAfter: number
-  data: any
-  description: string
-  accessDeniedDetail: any
+  statusCode?: number
+  retryAfter?: number
+  data?: any
+  description?: string
+  accessDeniedDetail?: any
 
   constructor(map: any) {
     super(map);
