@@ -20,38 +20,38 @@ export default class TeaFile {
     this._position = 0;
   }
 
-  path(): string{
+  path(): string {
     return this._path;
   }
 
-  async createTime(): Promise<TeaDate>{
-    if(!this._stat) {
+  async createTime(): Promise<TeaDate> {
+    if (!this._stat) {
       this._stat = await stat(this._path);
     }
     return new TeaDate(this._stat.birthtime);
   }
 
-  async modifyTime(): Promise<TeaDate>{
-    if(!this._stat) {
+  async modifyTime(): Promise<TeaDate> {
+    if (!this._stat) {
       this._stat = await stat(this._path);
     }
     return new TeaDate(this._stat.mtime);
   }
 
-  async length(): Promise<number>{
-    if(!this._stat) {
+  async length(): Promise<number> {
+    if (!this._stat) {
       this._stat = await stat(this._path);
     }
     return this._stat.size;
   }
 
   async read(size: number): Promise<Buffer> {
-    if(!this._fd) {
+    if (!this._fd) {
       this._fd = await open(this._path, 'a+');
     }
     const buf = Buffer.alloc(size);
     const { bytesRead, buffer } = await read(this._fd, buf, 0, size, this._position);
-    if(!bytesRead) {
+    if (!bytesRead) {
       return null;
     }
     this._position += bytesRead;
@@ -59,18 +59,18 @@ export default class TeaFile {
   }
 
   async write(data: Buffer): Promise<void> {
-    if(!this._fd) {
+    if (!this._fd) {
       this._fd = await open(this._path, 'a+');
     }
-    
+
     await write(this._fd, data);
-    
+
     this._stat = await stat(this._path);
     return;
   }
 
   async close(): Promise<void> {
-    if(!this._fd) {
+    if (!this._fd) {
       return;
     }
     await close(this._fd);
