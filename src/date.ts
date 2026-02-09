@@ -29,7 +29,7 @@ export default class TeaDate {
   }
 
   diff(amount: moment.unitOfTime.Base, diffDate: TeaDate): number {
-    return  this.date.diff(diffDate.date, amount);
+    return this.date.diff(diffDate.date, amount);
   }
 
   hour(): number {
@@ -58,7 +58,7 @@ export default class TeaDate {
 
   dayOfWeek(): number {
     const weekday = this.date.weekday();
-    if(weekday === 0) {
+    if (weekday === 0) {
       // sunday
       return 7;
     }
@@ -76,7 +76,7 @@ export default class TeaDate {
       return this.sub('day', 1).weekOfMonth();
     }
     const monthWeek = dateWeek - startWeek;
-    if(monthWeek < 0) {
+    if (monthWeek < 0) {
       // start of a new year
       return 1;
     }
@@ -85,8 +85,8 @@ export default class TeaDate {
 
   weekOfYear(): number {
     const weekday = this.date.weekday();
-    const week =  this.date.week();
-    if(weekday === 0 && week === 1  && this.date.date() > 1) {
+    const week = this.date.week();
+    if (weekday === 0 && week === 1 && this.date.date() > 1) {
       // the last day of this year is sunday
       return this.sub('day', 1).weekOfYear();
     }

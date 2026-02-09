@@ -1,5 +1,5 @@
 export * from './core';
-export  { default as Date } from './date';
+export { default as Date } from './date';
 export * from './error';
 export { default as File } from './file';
 export { default as Form, FileFormStream } from './form';

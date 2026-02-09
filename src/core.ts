@@ -206,7 +206,7 @@ export function toMap(value: any = undefined, withoutStream: boolean = false): a
     })
   }
 
-  if(withoutStream && (value instanceof Readable || value instanceof Writable)) {
+  if (withoutStream && (value instanceof Readable || value instanceof Writable)) {
     return null;
   }
 
@@ -235,7 +235,7 @@ export class Model extends $tea.Model {
     }));
   }
 
-  validate(): void {}
+  validate(): void { }
 
   copyWithoutStream<T extends Model>(): T {
     const map: TeaObject = this.toMap(true);
@@ -259,7 +259,7 @@ export class Model extends $tea.Model {
   }
 
   static validateRequired(key: string, value: any) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} is required.`,
@@ -268,10 +268,10 @@ export class Model extends $tea.Model {
   }
 
   static validateMaxLength(key: string, value: any, max: number) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       return;
     }
-    if(value.length > max) {
+    if (value.length > max) {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} is exceed max-length: ${max}.`,
@@ -280,10 +280,10 @@ export class Model extends $tea.Model {
   }
 
   static validateMinLength(key: string, value: any, min: number) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       return;
     }
-    if(value.length < min) {
+    if (value.length < min) {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} is exceed min-length: ${min}.`,
@@ -292,10 +292,10 @@ export class Model extends $tea.Model {
   }
 
   static validateMaximum(key: string, value: number | undefined, max: number) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       return;
     }
-    if(value > max) {
+    if (value > max) {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} cannot be greater than ${max}.`,
@@ -304,10 +304,10 @@ export class Model extends $tea.Model {
   }
 
   static validateMinimum(key: string, value: number | undefined, min: number) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       return;
     }
-    if(value < min) {
+    if (value < min) {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} cannot be less than ${min}.`,
@@ -316,11 +316,11 @@ export class Model extends $tea.Model {
   }
 
   static validatePattern(key: string, value: any, val: string) {
-    if(value === null || typeof value === 'undefined') {
+    if (value === null || typeof value === 'undefined') {
       return;
     }
     const reg = new RegExp(val);
-    if(!reg.test(value)) {
+    if (!reg.test(value)) {
       throw new BaseError({
         code: 'SDK.ValidateError',
         message: `${key} is not match ${val}.`,
@@ -329,37 +329,37 @@ export class Model extends $tea.Model {
   }
 
   static validateArray(data?: any[]) {
-    if(data === null || typeof data === 'undefined') {
+    if (data === null || typeof data === 'undefined') {
       return;
     }
     data.map(ele => {
-      if(!ele) {
+      if (!ele) {
         return;
       }
-      if(ele instanceof Model || typeof ele.validate === 'function') {
+      if (ele instanceof Model || typeof ele.validate === 'function') {
         ele.validate();
-      } else if(Array.isArray(ele)) {
+      } else if (Array.isArray(ele)) {
         Model.validateArray(ele);
-      } else if(ele instanceof Object) {
+      } else if (ele instanceof Object) {
         Model.validateMap(ele);
       }
     })
   }
 
   static validateMap(data?: { [key: string]: any }) {
-    if(data === null || typeof data === 'undefined') {
+    if (data === null || typeof data === 'undefined') {
       return;
     }
     Object.keys(data).map(key => {
       const ele = data[key];
-      if(!ele) {
+      if (!ele) {
         return;
       }
-      if(ele instanceof Model || typeof ele.validate === 'function') {
+      if (ele instanceof Model || typeof ele.validate === 'function') {
         ele.validate();
-      } else if(Array.isArray(ele)) {
+      } else if (Array.isArray(ele)) {
         Model.validateArray(ele);
-      } else if(ele instanceof Object) {
+      } else if (ele instanceof Object) {
         Model.validateMap(ele);
       }
     })
@@ -502,17 +502,17 @@ export function cast<T>(obj: any, t: T): T {
     }
     if (typeof type === 'string') {
       if (type === 'Readable' ||
-          type === 'Writable' ||
-          type === 'map' ||
-          type === 'Buffer' ||
-          type === 'any' ||
-          typeof value === type) {
+        type === 'Writable' ||
+        type === 'map' ||
+        type === 'Buffer' ||
+        type === 'any' ||
+        typeof value === type) {
         (<any>t)[key] = value;
         return;
       }
       if (type === 'string' &&
-          (typeof value === 'number' ||
-            typeof value === 'boolean')) {
+        (typeof value === 'number' ||
+          typeof value === 'boolean')) {
         (<any>t)[key] = value.toString();
         return;
       }

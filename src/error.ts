@@ -31,7 +31,7 @@ export class ResponseError extends BaseError {
     this.accessDeniedDetail = map.accessDeniedDetail;
     if (this.data && this.data.statusCode) {
       this.statusCode = Number(this.data.statusCode);
-    } 
+    }
   }
 }
 
@@ -71,7 +71,7 @@ export function newError(data: any): ResponseError {
 }
 
 export function newUnretryableError(ctx: RetryPolicyContext | Request): Error {
-  if(ctx instanceof RetryPolicyContext && ctx.exception) {
+  if (ctx instanceof RetryPolicyContext && ctx.exception) {
     return ctx.exception;
   } else {
     const e = new UnretryableError('');

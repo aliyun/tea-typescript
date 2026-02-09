@@ -10,6 +10,8 @@ describe('$dara func', function () {
     assert.deepStrictEqual($dara.isNull(undefined), true);
     assert.deepStrictEqual($dara.isNull(false), false);
     assert.deepStrictEqual($dara.isNull({}), false);
+    assert.deepStrictEqual($dara.isNull(''), false);
+    assert.deepStrictEqual($dara.isNull('test'), false);
   });
 
   it('merge should ok', async function () {

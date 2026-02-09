@@ -42,51 +42,51 @@ export default class TeaXML {
       let value = obj[originName];
       const type = types[key];
       switch (type) {
-      case 'boolean':
-        if (!value) {
-          ret[originName] = false;
-          return;
-        }
-        ret[originName] = value === 'false' ? false : true;
-        return;
-      case 'number':
-        if (value != 0 && !value) {
-          ret[originName] = NaN;
-          return;
-        }
-        ret[originName] = +value;
-        return;
-      case 'string':
-        if (!value) {
-          ret[originName] = '';
-          return;
-        }
-        ret[originName] = value.toString();
-        return;
-      default:
-        if (type.type === 'array') {
+        case 'boolean':
           if (!value) {
-            ret[originName] = [];
+            ret[originName] = false;
             return;
           }
-          if (!Array.isArray(value)) {
-            value = [value];
+          ret[originName] = value === 'false' ? false : true;
+          return;
+        case 'number':
+          if (value != 0 && !value) {
+            ret[originName] = NaN;
+            return;
           }
-          if (typeof type.itemType === 'function') {
-            ret[originName] = value.map((d: any) => {
-              return this._xmlCast(d, type.itemType);
-            });
+          ret[originName] = +value;
+          return;
+        case 'string':
+          if (!value) {
+            ret[originName] = '';
+            return;
+          }
+          ret[originName] = value.toString();
+          return;
+        default:
+          if (type.type === 'array') {
+            if (!value) {
+              ret[originName] = [];
+              return;
+            }
+            if (!Array.isArray(value)) {
+              value = [value];
+            }
+            if (typeof type.itemType === 'function') {
+              ret[originName] = value.map((d: any) => {
+                return this._xmlCast(d, type.itemType);
+              });
+            } else {
+              ret[originName] = value;
+            }
+          } else if (typeof type === 'function') {
+            if (!value) {
+              value = {}
+            }
+            ret[originName] = this._xmlCast(value, type);
           } else {
             ret[originName] = value;
           }
-        } else if (typeof type === 'function') {
-          if (!value) {
-            value = {}
-          }
-          ret[originName] = this._xmlCast(value, type);
-        } else {
-          ret[originName] = value;
-        }
       }
     })
     return ret;
