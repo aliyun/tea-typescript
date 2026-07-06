@@ -1,4 +1,5 @@
 export * from './core';
+export * from './websocket';
 export { default as Date } from './date';
 export * from './error';
 export { default as File } from './file';

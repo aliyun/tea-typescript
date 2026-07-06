@@ -35,6 +35,7 @@ export class Request {
   port: number;
   method: string;
   pathname: string;
+  domain: string;
   query: TeaDict;
   headers: TeaDict;
   body: Readable;
@@ -432,6 +433,17 @@ export class RuntimeOptions extends $tea.Model {
   maxIdleConns?: number;
   keepAlive?: boolean;
   extendsParameters?: ExtendsParameters;
+  webSocketPingInterval?: number;
+  webSocketPongTimeout?: number;
+  webSocketEnableReconnect?: boolean;
+  webSocketReconnectInterval?: number;
+  webSocketMaxReconnectTimes?: number;
+  webSocketWriteTimeout?: number;
+  webSocketHandshakeTimeout?: number;
+  webSocketHandler?: any;
+  websocketSubProtocol?: string;
+  socks5Proxy?: string;
+  socks5NetWork?: string;
   static names(): { [key: string]: string } {
     return {
       autoretry: 'autoretry',
@@ -450,6 +462,16 @@ export class RuntimeOptions extends $tea.Model {
       maxIdleConns: 'maxIdleConns',
       keepAlive: 'keepAlive',
       extendsParameters: 'extendsParameters',
+      webSocketPingInterval: 'webSocketPingInterval',
+      webSocketPongTimeout: 'webSocketPongTimeout',
+      webSocketEnableReconnect: 'webSocketEnableReconnect',
+      webSocketReconnectInterval: 'webSocketReconnectInterval',
+      webSocketMaxReconnectTimes: 'webSocketMaxReconnectTimes',
+      webSocketWriteTimeout: 'webSocketWriteTimeout',
+      webSocketHandshakeTimeout: 'webSocketHandshakeTimeout',
+      websocketSubProtocol: 'websocketSubProtocol',
+      socks5Proxy: 'socks5Proxy',
+      socks5NetWork: 'socks5NetWork',
     };
   }
 
@@ -472,11 +494,24 @@ export class RuntimeOptions extends $tea.Model {
       maxIdleConns: 'number',
       keepAlive: 'boolean',
       extendsParameters: ExtendsParameters,
+      webSocketPingInterval: 'number',
+      webSocketPongTimeout: 'number',
+      webSocketEnableReconnect: 'boolean',
+      webSocketReconnectInterval: 'number',
+      webSocketMaxReconnectTimes: 'number',
+      webSocketWriteTimeout: 'number',
+      webSocketHandshakeTimeout: 'number',
+      websocketSubProtocol: 'string',
+      socks5Proxy: 'string',
+      socks5NetWork: 'string',
     };
   }
 
   constructor(map?: { [key: string]: any }) {
     super(map);
+    if (map && map.webSocketHandler) {
+      this.webSocketHandler = map.webSocketHandler;
+    }
   }
 }
 
