@@ -148,7 +148,6 @@ export class DefaultWebSocketClient implements WebSocketClient {
   private pongTimeout = 5000;
   private maxReconnectTimes = 5;
   private reconnectLock = false;
-  private websocketSubProtocol: string | undefined;
   private abortController: AbortController | null = null;
   private messageHandlersStarted = false;
 
@@ -170,7 +169,6 @@ export class DefaultWebSocketClient implements WebSocketClient {
     this.request = request;
     this.runtimeObject = runtimeObject;
     this.updateTimeoutConfig(runtimeObject);
-    this.websocketSubProtocol = getWebsocketSubProtocol(runtimeObject);
     this.state = STATE_CONNECTING;
     this.stopped = false;
     this.pongReceived = false;
@@ -204,10 +202,6 @@ export class DefaultWebSocketClient implements WebSocketClient {
       });
     }
 
-    if (this.websocketSubProtocol) {
-      headers['Sec-WebSocket-Protocol'] = this.websocketSubProtocol;
-    }
-
     const wsOptions: WebSocket.ClientOptions = {
       handshakeTimeout,
       headers,
@@ -230,8 +224,6 @@ export class DefaultWebSocketClient implements WebSocketClient {
 
     this.configureProxy(wsOptions, parsed, runtimeObject, request);
 
-    const protocols = this.websocketSubProtocol ? [this.websocketSubProtocol] : undefined;
-
     return new Promise<Response>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         if (this.state === STATE_CONNECTING) {
@@ -241,7 +233,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
       }, connectTimeout);
 
       let upgradeResponse: http.IncomingMessage | null = null;
-      const ws = new WebSocket(requestURL, protocols, wsOptions);
+      const ws = new WebSocket(requestURL, wsOptions);
 
       ws.on('upgrade', (response) => {
         upgradeResponse = response;
