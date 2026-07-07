@@ -71,10 +71,6 @@ export function getWebSocketHandler(runtime: RuntimeOptions | null | undefined):
   return runtime?.webSocketHandler;
 }
 
-export function getWebsocketSubProtocol(runtime: RuntimeOptions | null | undefined): string | undefined {
-  return runtime?.websocketSubProtocol;
-}
-
 export function newWebSocketResponse(statusCode: number, statusMessage: string, headers: http.IncomingHttpHeaders): Response {
   const fakeResponse = {
     statusCode,
