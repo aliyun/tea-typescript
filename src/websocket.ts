@@ -5,10 +5,72 @@ import * as querystring from 'querystring';
 import * as tls from 'tls';
 import { parse as urlParse, UrlWithStringQuery } from 'url';
 import WebSocket from 'ws';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
+// Keep proxy-agent on v5/v6 so Node 12 CI can parse the packages (v7+ needs optional chaining).
+import createHttpsProxyAgent from 'https-proxy-agent';
+import createHttpProxyAgent from 'http-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { Request, Response, RuntimeOptions } from './core';
+
+/** Minimal AbortController for Node < 15 (CI still runs 12.x / 14.x). */
+interface AbortSignalLike {
+  readonly aborted: boolean;
+  addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void;
+}
+
+interface AbortControllerLike {
+  readonly signal: AbortSignalLike;
+  abort(): void;
+}
+
+class PolyfillAbortSignal implements AbortSignalLike {
+  aborted = false;
+  private listeners: Array<() => void> = [];
+
+  addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void {
+    if (type !== 'abort') {
+      return;
+    }
+    const wrapped = options && options.once
+      ? () => {
+        this.removeListener(wrapped);
+        listener();
+      }
+      : listener;
+    this.listeners.push(wrapped);
+  }
+
+  private removeListener(listener: () => void): void {
+    const idx = this.listeners.indexOf(listener);
+    if (idx >= 0) {
+      this.listeners.splice(idx, 1);
+    }
+  }
+
+  dispatchAbort(): void {
+    if (this.aborted) {
+      return;
+    }
+    this.aborted = true;
+    const copy = this.listeners.slice();
+    this.listeners = [];
+    copy.forEach((fn) => fn());
+  }
+}
+
+class PolyfillAbortController implements AbortControllerLike {
+  readonly signal = new PolyfillAbortSignal();
+
+  abort(): void {
+    this.signal.dispatchAbort();
+  }
+}
+
+function createAbortController(): AbortControllerLike {
+  if (typeof AbortController !== 'undefined') {
+    return new AbortController();
+  }
+  return new PolyfillAbortController();
+}
 
 export enum WebSocketMessageType {
   Text = 0,
@@ -144,7 +206,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
   private pongTimeout = 5000;
   private maxReconnectTimes = 5;
   private reconnectLock = false;
-  private abortController: AbortController | null = null;
+  private abortController: AbortControllerLike | null = null;
   private messageHandlersStarted = false;
 
   constructor(handler: WebSocketHandler) {
@@ -172,7 +234,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
     if (this.abortController) {
       this.abortController.abort();
     }
-    this.abortController = new AbortController();
+    this.abortController = createAbortController();
 
     const requestURL = buildWebSocketURL(request);
     const parsed = urlParse(requestURL);
@@ -499,7 +561,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
     if (!socks5Proxy) {
       return;
     }
-    wsOptions.agent = new SocksProxyAgent(socks5Proxy);
+    wsOptions.agent = new SocksProxyAgent(socks5Proxy) as any;
   }
 
   configureHTTPProxy(
@@ -527,9 +589,9 @@ export class DefaultWebSocketClient implements WebSocketClient {
     }
 
     if (protocol === 'wss' || protocol === 'https') {
-      wsOptions.agent = new HttpsProxyAgent(proxyURL);
+      wsOptions.agent = createHttpsProxyAgent(proxyURL) as any;
     } else {
-      wsOptions.agent = new HttpProxyAgent(proxyURL);
+      wsOptions.agent = createHttpProxyAgent(proxyURL) as any;
     }
 
     const parsedProxy = urlParse(proxyURL);
