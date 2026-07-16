@@ -72,7 +72,8 @@ class ExponentialBackoffPolicy extends BackoffPolicy {
   }
 
   getDelayTime(ctx: RetryPolicyContext): number {
-    const randomTime = Math.pow(2, ctx.retriesAttempted * this.period);
+    // period * 2^retries (align with C# / standard exponential backoff)
+    const randomTime = this.period * Math.pow(2, ctx.retriesAttempted);
     if (randomTime > this.cap) {
       return this.cap;
     }
@@ -91,7 +92,7 @@ class EqualJitterBackoffPolicy extends BackoffPolicy {
   }
 
   getDelayTime(ctx: RetryPolicyContext): number {
-    const ceil = Math.min(this.cap, Math.pow(2, ctx.retriesAttempted * this.period));
+    const ceil = Math.min(this.cap, this.period * Math.pow(2, ctx.retriesAttempted));
     return ceil / 2 + Math.floor(Math.random() * (ceil / 2 + 1));
   }
 }
@@ -107,7 +108,7 @@ class FullJitterBackoffPolicy extends BackoffPolicy {
   }
 
   getDelayTime(ctx: RetryPolicyContext): number {
-    const ceil = Math.min(this.cap, Math.pow(2, ctx.retriesAttempted * this.period));
+    const ceil = Math.min(this.cap, this.period * Math.pow(2, ctx.retriesAttempted));
     return Math.floor(Math.random() * ceil);
   }
 }
