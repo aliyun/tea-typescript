@@ -747,7 +747,8 @@ describe('$dara', function () {
       max: 100,
       multiplier: 1
     }, 5);
-    assert.strictEqual(b, 100);
+    // time=160 then * (0.5+rand) capped by max → [80, 100]
+    assert.strictEqual(b >= 80 && b <= 100, true);
 
     // default
     assert.strictEqual($dara.getBackoffTime({
