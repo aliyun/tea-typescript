@@ -21,6 +21,12 @@ describe('$dara error', function () {
   it('newUnretryableError should ok', function () {
     const err = $dara.newUnretryableError(new $dara.RetryPolicyContext({}));
     assert.strictEqual(err.name, 'UnretryableError');
+
+    const original = new $dara.BaseError({ code: 'Orig', message: 'kept' });
+    const fromCtx = $dara.newUnretryableError(new $dara.RetryPolicyContext({
+      exception: original,
+    }));
+    assert.strictEqual(fromCtx, original);
   });
 
   it('newError should ok', function () {

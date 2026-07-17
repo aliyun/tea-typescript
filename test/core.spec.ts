@@ -1277,4 +1277,37 @@ describe('$dara', function () {
     const m = new AnotherModel();
     assert.deepStrictEqual($dara.toMap(m), {});
   });
+
+  it('ExtendsParameters and validate edge cases should ok', function () {
+    const ep = new $dara.ExtendsParameters({
+      headers: { a: '1' },
+      queries: { b: '2' },
+    });
+    assert.deepStrictEqual($dara.ExtendsParameters.names(), {
+      headers: 'headers',
+      queries: 'queries',
+    });
+    assert.ok($dara.ExtendsParameters.types());
+    assert.deepStrictEqual(ep.headers, { a: '1' });
+
+    $dara.Model.validateMaximum('n', undefined, 1);
+    $dara.Model.validateMinimum('n', undefined, 1);
+    $dara.Model.validatePattern('n', undefined, '^x');
+    $dara.Model.validateArray(undefined);
+    $dara.Model.validateMap(undefined);
+    $dara.Model.validateMap({
+      nested: { inner: null },
+      arr: [{ x: 1 }],
+    });
+  });
+
+  it('doAction with keepAlive over https agent path should ok', async function () {
+    const request = new $dara.Request();
+    request.protocol = 'https';
+    request.method = 'GET';
+    request.pathname = '/';
+    request.port = (server.address() as AddressInfo).port;
+    request.headers['host'] = '127.0.0.1';
+    await assert.rejects(() => $dara.doAction(request, { keepAlive: true, connectTimeout: 500 }));
+  });
 });

@@ -33,5 +33,7 @@ describe('$dara url', function () {
   it('pathEncode should ok', async function () {
     const result = $dara.URL.pathEncode("/work_space/DARABONBA/GIT/darabonba-util/ts")
     assert.strictEqual("/work_space/DARABONBA/GIT/darabonba-util/ts", result);
+    assert.strictEqual($dara.URL.pathEncode('/'), '/');
+    assert.strictEqual($dara.URL.pathEncode(''), '');
   });
 });
