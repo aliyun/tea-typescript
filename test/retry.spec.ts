@@ -307,6 +307,24 @@ describe('$dara retry', function () {
 
     assert.deepStrictEqual($dara.getBackoffDelay(option, context), 40);
 
+    // exceed cap: period * 2^retries > cap
+    exponentialPolicy = $dara.BackoffPolicy.newBackoffPolicy({
+      policy: 'Exponential',
+      period: 1000,
+      cap: 50,
+    });
+    const conditionCap = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+      backoff: exponentialPolicy,
+    });
+    option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [conditionCap]
+    });
+    assert.deepStrictEqual($dara.getBackoffDelay(option, context), 50);
+
     let equalJitterPolicy = $dara.BackoffPolicy.newBackoffPolicy({
       policy: 'EqualJitter',
       period: 5,

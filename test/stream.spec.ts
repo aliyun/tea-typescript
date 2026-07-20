@@ -110,6 +110,29 @@ describe('$dara stream', function () {
     assert.deepStrictEqual(result, '{"a":"b"}');
   });
 
+  it('readAsBytes should reject on stream error', async function () {
+    const readable = new Readable({
+      read() {
+        this.emit('error', new Error('read failed'));
+      }
+    });
+    await assert.rejects(() => $dara.Stream.readAsBytes(readable), /read failed/);
+  });
+
+  it('readAsSSE should reject on stream error', async function () {
+    const readable = new Readable({
+      read() {
+        this.emit('error', new Error('sse failed'));
+      }
+    });
+    const iter = $dara.Stream.readAsSSE(readable);
+    await assert.rejects(async () => {
+      for await (const _event of iter) {
+        // consume
+      }
+    }, /sse failed/);
+  });
+
   it('readAsSSE', async function () {
     const res = await httpx.request("http://127.0.0.1:8384/sse", { readTimeout: 5000 });
     assert.strictEqual(res.statusCode, 200);

@@ -67,6 +67,11 @@ describe('$dara file', function () {
     assert.ok(!(await $dara.File.exists(path.join(__dirname, './fixtures/test1.txt'))));
   });
 
+  it('close without open should ok', async () => {
+    const untouched = new $dara.File(path.join(__dirname, './fixtures/empty.txt'));
+    await untouched.close();
+  });
+
   it('creatStream should ok', function () {
     const rs = $dara.File.createReadStream(path.join(__dirname, './fixtures/test.txt'));
     const ws = $dara.File.createWriteStream(path.join(__dirname, './fixtures/test.txt'));

@@ -38,5 +38,9 @@ describe('$dara date', function () {
     assert.strictEqual(yesterday.year(), 2023);
     assert.strictEqual(tomorrow.month(), 1);
     assert.strictEqual(tomorrow.year(), 2024);
+
+    // non-Sunday weekday path (Monday → weekday()+1)
+    const monday = new $dara.Date('2024-01-01 12:00:00');
+    assert.strictEqual(monday.dayOfWeek(), 2);
   });
 });
