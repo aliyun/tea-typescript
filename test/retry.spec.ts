@@ -153,6 +153,87 @@ describe('$dara retry', function () {
     assert.deepStrictEqual($dara.shouldRetry(option, context), false);
   });
 
+  it('shouldRetry defaults maxAttempts to 3 when omitted', function () {
+    // Missing maxAttempts must not retry forever: n >= undefined is always false in JS.
+    const conditionNoMax = new $dara.RetryCondition({
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+    });
+    assert.strictEqual(conditionNoMax.maxAttempts, 3);
+
+    const option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [conditionNoMax],
+    });
+
+    let context = new $dara.RetryPolicyContext({
+      retriesAttempted: 1,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(option, context), true);
+
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 2,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(option, context), true);
+
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 3,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(option, context), false);
+
+    // Explicit undefined (same as omitted) also defaults to 3
+    const conditionUndef = new $dara.RetryCondition({
+      maxAttempts: undefined,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+    });
+    assert.strictEqual(conditionUndef.maxAttempts, 3);
+    const optionUndef = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [conditionUndef],
+    });
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 3,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(optionUndef, context), false);
+
+    // Explicit 0 still means no retry after first attempt
+    const conditionZero = new $dara.RetryCondition({
+      maxAttempts: 0,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+    });
+    assert.strictEqual(conditionZero.maxAttempts, 0);
+    const optionZero = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [conditionZero],
+    });
+    context = new $dara.RetryPolicyContext({
+      retriesAttempted: 1,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(optionZero, context), false);
+  });
+
   it('getBackoffDelay should ok', async function () {
     const condition = new $dara.RetryCondition({
       maxAttempts: 3,

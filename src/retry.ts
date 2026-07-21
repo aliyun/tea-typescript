@@ -114,6 +114,9 @@ class FullJitterBackoffPolicy extends BackoffPolicy {
 }
 
 
+/** Default maxAttempts when omitted (align with Go effectiveMaxAttempts). */
+export const DEFAULT_MAX_ATTEMPTS = 3;
+
 export class RetryCondition {
   maxAttempts: number;
   backoff: BackoffPolicy;
@@ -121,7 +124,8 @@ export class RetryCondition {
   errorCode: string[];
   maxDelay: number;
   constructor(condition: { [key: string]: any }) {
-    this.maxAttempts = condition.maxAttempts;
+    // Avoid undefined: `n >= undefined` is always false in JS and would retry forever.
+    this.maxAttempts = condition.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
     this.backoff = condition.backoff && BackoffPolicy.newBackoffPolicy(condition.backoff);
     this.exception = condition.exception;
     this.errorCode = condition.errorCode;
@@ -183,7 +187,8 @@ export function shouldRetry(options: RetryOptions, ctx: RetryPolicyContext): boo
     if (!condition.exception.includes(ex.name) && !condition.errorCode.includes(ex.code)) {
       continue;
     }
-    if (retriesAttempted >= condition.maxAttempts) {
+    const maxAttempts = condition.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+    if (retriesAttempted >= maxAttempts) {
       return false;
     }
     return true;
