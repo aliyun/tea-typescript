@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import * as dns from 'dns';
 import * as http from 'http';
 import { IncomingMessage } from 'http';
 import * as querystring from 'querystring';
@@ -9,7 +10,7 @@ import WebSocket from 'ws';
 import createHttpsProxyAgent from 'https-proxy-agent';
 import createHttpProxyAgent from 'http-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
-import { Request, Response, RuntimeOptions } from './core';
+import { Request, Response, RuntimeOptions, assertIPv4OnlyHost } from './core';
 
 /** Minimal AbortController for Node < 15 (CI still runs 12.x / 14.x). */
 interface AbortSignalLike {
@@ -278,6 +279,18 @@ export class DefaultWebSocketClient implements WebSocketClient {
       if (tlsOptions.ca) {
         wsOptions.ca = tlsOptions.ca;
       }
+    }
+
+    if (runtimeObject.ipv4Only === true) {
+      try {
+        assertIPv4OnlyHost(parsed.hostname);
+      } catch (err) {
+        this.state = STATE_DISCONNECTED;
+        throw err;
+      }
+      // family covers direct dials; lookup is also used by the socks agent
+      // when it resolves the target locally (socks4/socks5 schemes).
+      Object.assign(wsOptions, { family: 4, lookup: ipv4OnlyLookup });
     }
 
     this.configureProxy(wsOptions, parsed, runtimeObject, request);
@@ -588,10 +601,14 @@ export class DefaultWebSocketClient implements WebSocketClient {
       return;
     }
 
+    // With ipv4Only the hop to the proxy is IPv4-only; the target is resolved by the proxy.
+    const proxyOptions: any = runtimeObject.ipv4Only === true
+      ? Object.assign(urlParse(proxyURL), { family: 4 })
+      : proxyURL;
     if (protocol === 'wss' || protocol === 'https') {
-      wsOptions.agent = createHttpsProxyAgent(proxyURL) as any;
+      wsOptions.agent = createHttpsProxyAgent(proxyOptions) as any;
     } else {
-      wsOptions.agent = createHttpProxyAgent(proxyURL) as any;
+      wsOptions.agent = createHttpProxyAgent(proxyOptions) as any;
     }
 
     const parsedProxy = urlParse(proxyURL);
@@ -863,6 +880,10 @@ export function convertToWebSocketMessageType(messageType: number): WebSocketMes
     default:
       return WebSocketMessageType.Binary;
   }
+}
+
+export function ipv4OnlyLookup(hostname: string, options: dns.LookupOptions, callback: (...args: any[]) => void): void {
+  dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
 }
 
 function generateSessionID(): string {

@@ -1,6 +1,7 @@
 import * as querystring from 'querystring';
 import { IncomingMessage, IncomingHttpHeaders, Agent as HttpAgent } from 'http';
 import { Agent as HttpsAgent } from 'https';
+import { isIPv6 } from 'net';
 import { Readable, Writable } from 'stream';
 import * as httpx from 'httpx';
 import { parse } from 'url';
@@ -91,6 +92,29 @@ function buildURL(request: Request) {
   return url;
 }
 
+// IPv4-only agents are kept apart from the dual-stack agents (httpx defaults and
+// per-request keepAlive agents) so an IPv4-only request never reuses an IPv6 socket.
+const ipv4OnlyAgents = new Map<string, HttpAgent | HttpsAgent>();
+
+export function getIPv4OnlyAgent(isHttps: boolean, keepAlive: boolean): HttpAgent | HttpsAgent {
+  const key = `${isHttps ? 'https' : 'http'}:keepAlive=${keepAlive}:ipv4Only=true`;
+  let agent = ipv4OnlyAgents.get(key);
+  if (!agent) {
+    // family: 4 restricts DNS resolution to A records, which also keeps
+    // autoSelectFamily (happy eyeballs) from falling back to IPv6.
+    const agentOptions = { keepAlive, family: 4 };
+    agent = isHttps ? new HttpsAgent(agentOptions) : new HttpAgent(agentOptions);
+    ipv4OnlyAgents.set(key, agent);
+  }
+  return agent;
+}
+
+export function assertIPv4OnlyHost(hostname: string): void {
+  if (hostname && isIPv6(hostname)) {
+    throw new Error(`ipv4Only is enabled but host ${hostname} is an IPv6 address`);
+  }
+}
+
 function isModelClass(t: any): boolean {
   if (!t) {
     return false;
@@ -143,7 +167,14 @@ export async function doAction(request: Request, runtime: TeaObject = null): Pro
     const agentOptions: AgentOptions = {
       keepAlive: true,
     };
-    if (typeof runtime.keepAlive !== 'undefined') {
+    if (runtime.ipv4Only === true) {
+      if (typeof runtime.keepAlive !== 'undefined') {
+        agentOptions.keepAlive = runtime.keepAlive;
+      }
+      assertIPv4OnlyHost(parse(url).hostname);
+      const isHttps = !!request.protocol && request.protocol.toLowerCase() === 'https';
+      options.agent = getIPv4OnlyAgent(isHttps, !!agentOptions.keepAlive);
+    } else if (typeof runtime.keepAlive !== 'undefined') {
       agentOptions.keepAlive = runtime.keepAlive;
       if (request.protocol && request.protocol.toLowerCase() === 'https') {
         options.agent = new HttpsAgent(agentOptions);
@@ -432,6 +463,7 @@ export class RuntimeOptions extends $tea.Model {
   noProxy?: string;
   maxIdleConns?: number;
   keepAlive?: boolean;
+  ipv4Only?: boolean;
   extendsParameters?: ExtendsParameters;
   webSocketPingInterval?: number;
   webSocketPongTimeout?: number;
@@ -460,6 +492,7 @@ export class RuntimeOptions extends $tea.Model {
       noProxy: 'noProxy',
       maxIdleConns: 'maxIdleConns',
       keepAlive: 'keepAlive',
+      ipv4Only: 'ipv4Only',
       extendsParameters: 'extendsParameters',
       webSocketPingInterval: 'webSocketPingInterval',
       webSocketPongTimeout: 'webSocketPongTimeout',
@@ -491,6 +524,7 @@ export class RuntimeOptions extends $tea.Model {
       noProxy: 'string',
       maxIdleConns: 'number',
       keepAlive: 'boolean',
+      ipv4Only: 'boolean',
       extendsParameters: ExtendsParameters,
       webSocketPingInterval: 'number',
       webSocketPongTimeout: 'number',
