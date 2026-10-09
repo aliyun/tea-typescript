@@ -35,7 +35,14 @@ async function localhostIsDualStack(): Promise<boolean> {
   const addrs = await new Promise<dns.LookupAddress[]>((resolve) => {
     dns.lookup('localhost', { all: true }, (err, res) => resolve(err ? [] : res));
   });
-  return addrs.some((a) => a.family === 4) && addrs.some((a) => a.family === 6);
+  if (!addrs.some((a) => a.family === 4) || !addrs.some((a) => a.family === 6)) {
+    return false;
+  }
+  // Node < 17 reorders lookups IPv4-first, so a default agent never reaches an ::1-only server.
+  const first = await new Promise<number>((resolve) => {
+    dns.lookup('localhost', (err, _address, family) => resolve(err ? 0 : family));
+  });
+  return first === 6;
 }
 
 async function canListenOnIPv6Loopback(): Promise<boolean> {
