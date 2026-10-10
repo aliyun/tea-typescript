@@ -138,11 +138,12 @@ describe('ipv4Only', function () {
       await assert.rejects(() => get(newRequest(v6Port), { ipv4Only: true, connectTimeout: 1000 }), (err: any) => {
         return err.code === 'ECONNREFUSED' || /ECONNREFUSED/.test(err.message);
       });
-      await assert.rejects(() => get(newRequest(v6Port), new $dara.RuntimeOptions({
+      // ipv4Only is read from the plain runtime map (not RuntimeOptions model fields)
+      await assert.rejects(() => get(newRequest(v6Port), {
         ipv4Only: true,
         keepAlive: false,
         connectTimeout: 1000,
-      })));
+      }));
     });
 
     it('ipv4Only=true should succeed against a 127.0.0.1 server', async function () {
@@ -238,14 +239,14 @@ describe('ipv4Only', function () {
         return request;
       }
 
-      function runtime(ipv4Only?: boolean): $dara.RuntimeOptions {
+      function runtime(ipv4Only?: boolean): any {
         // Pass ipv4Only via plain runtime map (not RuntimeOptions model field)
         return {
           connectTimeout: 2000,
           webSocketPingInterval: 0,
           webSocketEnableReconnect: false,
           ipv4Only,
-        } as $dara.RuntimeOptions;
+        };
       }
 
       before(async function () {
