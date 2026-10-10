@@ -463,7 +463,6 @@ export class RuntimeOptions extends $tea.Model {
   noProxy?: string;
   maxIdleConns?: number;
   keepAlive?: boolean;
-  ipv4Only?: boolean;
   extendsParameters?: ExtendsParameters;
   webSocketPingInterval?: number;
   webSocketPongTimeout?: number;
@@ -492,7 +491,6 @@ export class RuntimeOptions extends $tea.Model {
       noProxy: 'noProxy',
       maxIdleConns: 'maxIdleConns',
       keepAlive: 'keepAlive',
-      ipv4Only: 'ipv4Only',
       extendsParameters: 'extendsParameters',
       webSocketPingInterval: 'webSocketPingInterval',
       webSocketPongTimeout: 'webSocketPongTimeout',
@@ -524,7 +522,6 @@ export class RuntimeOptions extends $tea.Model {
       noProxy: 'string',
       maxIdleConns: 'number',
       keepAlive: 'boolean',
-      ipv4Only: 'boolean',
       extendsParameters: ExtendsParameters,
       webSocketPingInterval: 'number',
       webSocketPongTimeout: 'number',

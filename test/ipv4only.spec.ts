@@ -72,23 +72,6 @@ async function get(request: $dara.Request, runtime: { [key: string]: any } = nul
 }
 
 describe('ipv4Only', function () {
-  it('RuntimeOptions should support ipv4Only', function () {
-    assert.strictEqual($dara.RuntimeOptions.names().ipv4Only, 'ipv4Only');
-    assert.strictEqual($dara.RuntimeOptions.types().ipv4Only, 'boolean');
-
-    const defaults = new $dara.RuntimeOptions({});
-    assert.strictEqual(defaults.ipv4Only, undefined);
-    assert.strictEqual(defaults.toMap().ipv4Only, undefined);
-
-    const runtime = new $dara.RuntimeOptions({ ipv4Only: true, keepAlive: false });
-    assert.strictEqual(runtime.ipv4Only, true);
-    assert.strictEqual(runtime.keepAlive, false);
-    assert.strictEqual(runtime.toMap().ipv4Only, true);
-
-    const casted = $dara.cast<$dara.RuntimeOptions>({ ipv4Only: 'true' }, new $dara.RuntimeOptions({}));
-    assert.strictEqual(casted.ipv4Only, true);
-  });
-
   it('getIPv4OnlyAgent should cache per protocol and keepAlive with family 4', function () {
     const httpAgent = $dara.getIPv4OnlyAgent(false, true);
     assert.ok(httpAgent instanceof http.Agent);
@@ -211,8 +194,9 @@ describe('ipv4Only', function () {
 
       const httpsOptions: any = {};
       const request = new $dara.Request();
+      // ipv4Only is read from the plain runtime map, not RuntimeOptions model fields
       client.configureHTTPProxy(httpsOptions, new URL('wss://example.com/ws') as any,
-        new $dara.RuntimeOptions({ httpsProxy: 'http://user:pass@proxy.example.com:8080', ipv4Only: true }), request);
+        { httpsProxy: 'http://user:pass@proxy.example.com:8080', ipv4Only: true } as any, request);
       assert.strictEqual(httpsOptions.agent.proxy.family, 4);
       assert.strictEqual(httpsOptions.agent.proxy.host, 'proxy.example.com');
       assert.strictEqual(httpsOptions.agent.proxy.port, 8080);
@@ -220,7 +204,7 @@ describe('ipv4Only', function () {
 
       const httpOptions: any = {};
       client.configureHTTPProxy(httpOptions, new URL('ws://example.com/ws') as any,
-        new $dara.RuntimeOptions({ httpProxy: 'http://proxy.example.com:8080', ipv4Only: true }), new $dara.Request());
+        { httpProxy: 'http://proxy.example.com:8080', ipv4Only: true } as any, new $dara.Request());
       assert.strictEqual(httpOptions.agent.proxy.family, 4);
 
       const dualOptions: any = {};
@@ -255,12 +239,13 @@ describe('ipv4Only', function () {
       }
 
       function runtime(ipv4Only?: boolean): $dara.RuntimeOptions {
-        return new $dara.RuntimeOptions({
+        // Pass ipv4Only via plain runtime map (not RuntimeOptions model field)
+        return {
           connectTimeout: 2000,
           webSocketPingInterval: 0,
           webSocketEnableReconnect: false,
           ipv4Only,
-        });
+        } as $dara.RuntimeOptions;
       }
 
       before(async function () {
