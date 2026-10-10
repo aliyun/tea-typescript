@@ -499,6 +499,7 @@ export class RuntimeOptions extends $tea.Model {
       webSocketMaxReconnectTimes: 'webSocketMaxReconnectTimes',
       webSocketWriteTimeout: 'webSocketWriteTimeout',
       webSocketHandshakeTimeout: 'webSocketHandshakeTimeout',
+      webSocketHandler: 'webSocketHandler',
       socks5Proxy: 'socks5Proxy',
       socks5NetWork: 'socks5NetWork',
     };
@@ -530,6 +531,7 @@ export class RuntimeOptions extends $tea.Model {
       webSocketMaxReconnectTimes: 'number',
       webSocketWriteTimeout: 'number',
       webSocketHandshakeTimeout: 'number',
+      webSocketHandler: 'any',
       socks5Proxy: 'string',
       socks5NetWork: 'string',
     };
