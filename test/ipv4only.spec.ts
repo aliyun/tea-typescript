@@ -202,16 +202,42 @@ describe('ipv4Only', function () {
       assert.strictEqual(httpsOptions.agent.proxy.host, 'proxy.example.com');
       assert.strictEqual(httpsOptions.agent.proxy.port, 8080);
       assert.strictEqual(request.headers['Proxy-Authorization'], 'Basic dXNlcjpwYXNz');
+      // CONNECT tunnel agent is used for both wss and ws
+      assert.strictEqual(httpsOptions.agent.constructor.name, 'HttpsProxyAgent');
 
       const httpOptions: any = {};
       client.configureHTTPProxy(httpOptions, new URL('ws://example.com/ws') as any,
         { httpProxy: 'http://proxy.example.com:8080', ipv4Only: true } as any, new $dara.Request());
       assert.strictEqual(httpOptions.agent.proxy.family, 4);
+      assert.strictEqual(httpOptions.agent.constructor.name, 'HttpsProxyAgent');
 
       const dualOptions: any = {};
       client.configureHTTPProxy(dualOptions, new URL('ws://example.com/ws') as any,
         new $dara.RuntimeOptions({ httpProxy: 'http://proxy.example.com:8080' }), new $dara.Request());
       assert.strictEqual(dualOptions.agent.proxy.family, undefined);
+      assert.strictEqual(dualOptions.agent.constructor.name, 'HttpsProxyAgent');
+
+      assert.throws(() => client.configureHTTPProxy({} as any, new URL('ws://example.com/ws') as any,
+        { httpProxy: 'http://[::1]:8080', ipv4Only: true } as any, new $dara.Request()),
+        /ipv4Only is enabled but host ::1 is an IPv6 address/);
+    });
+
+    it('extractWebSocketProtocols should move Sec-WebSocket-Protocol into protocols', function () {
+      const headers = { 'Sec-WebSocket-Protocol': 'dara.v1, dara.v2', 'X-Other': '1' };
+      assert.deepStrictEqual($dara.extractWebSocketProtocols(headers), ['dara.v1', 'dara.v2']);
+      assert.strictEqual(headers['Sec-WebSocket-Protocol'], undefined);
+      assert.strictEqual(headers['X-Other'], '1');
+      assert.deepStrictEqual($dara.extractWebSocketProtocols({}), []);
+      assert.deepStrictEqual($dara.extractWebSocketProtocols({ 'Sec-WebSocket-Protocol': '' }), []);
+    });
+
+    it('pinProxyUrlToIpv4 should resolve hostnames and reject bad input', async function () {
+      assert.strictEqual(await $dara.pinProxyUrlToIpv4('socks5://127.0.0.1:1080'), 'socks5://127.0.0.1:1080');
+      assert.strictEqual(await $dara.pinProxyUrlToIpv4('socks5://user:pass@127.0.0.1:1080'), 'socks5://user:pass@127.0.0.1:1080');
+      const pinned = await $dara.pinProxyUrlToIpv4('socks5://localhost:1080');
+      assert.ok(pinned.startsWith('socks5://127.0.0.1:1080'));
+      await assert.rejects(() => $dara.pinProxyUrlToIpv4('socks5://'), /invalid proxy URL/);
+      await assert.rejects(() => $dara.pinProxyUrlToIpv4('socks5://[::1]:1080'), /IPv6 address/);
     });
 
     describe('connect', function () {

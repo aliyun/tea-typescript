@@ -486,6 +486,7 @@ describe('WebSocket', function () {
       request,
     );
     assert.ok(httpOptions.agent);
+    assert.strictEqual(httpOptions.agent.constructor.name, 'HttpsProxyAgent');
 
     const nullParsed: any = {};
     client.configureHTTPProxy(
