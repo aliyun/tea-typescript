@@ -1,15 +1,17 @@
 import * as crypto from 'crypto';
+import * as dns from 'dns';
 import * as http from 'http';
 import { IncomingMessage } from 'http';
+import { isIPv4 } from 'net';
 import * as querystring from 'querystring';
 import * as tls from 'tls';
 import { parse as urlParse, UrlWithStringQuery } from 'url';
 import WebSocket from 'ws';
 // Keep proxy-agent on v5/v6 so Node 12 CI can parse the packages (v7+ needs optional chaining).
+// Always use https-proxy-agent for WebSocket so both ws:// and wss:// go through CONNECT.
 import createHttpsProxyAgent from 'https-proxy-agent';
-import createHttpProxyAgent from 'http-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
-import { Request, Response, RuntimeOptions } from './core';
+import { Request, Response, RuntimeOptions, assertIPv4OnlyHost } from './core';
 
 /** Minimal AbortController for Node < 15 (CI still runs 12.x / 14.x). */
 interface AbortSignalLike {
@@ -259,6 +261,8 @@ export class DefaultWebSocketClient implements WebSocketClient {
         }
       });
     }
+    // ws validates Sec-WebSocket-Protocol against the protocols argument, not headers alone
+    const protocols = extractWebSocketProtocols(headers);
 
     const wsOptions: WebSocket.ClientOptions = {
       handshakeTimeout,
@@ -280,7 +284,30 @@ export class DefaultWebSocketClient implements WebSocketClient {
       }
     }
 
-    this.configureProxy(wsOptions, parsed, runtimeObject, request);
+    let runtimeForProxy = runtimeObject;
+    if (runtimeObject.ipv4Only === true) {
+      try {
+        assertIPv4OnlyHost(parsed.hostname);
+      } catch (err) {
+        this.state = STATE_DISCONNECTED;
+        throw err;
+      }
+      // family covers direct dials; lookup is also used by the socks agent
+      // when it resolves the target locally (socks4/socks5 schemes).
+      Object.assign(wsOptions, { family: 4, lookup: ipv4OnlyLookup });
+      if (runtimeObject.socks5Proxy) {
+        try {
+          runtimeForProxy = Object.assign({}, runtimeObject, {
+            socks5Proxy: await pinProxyUrlToIpv4(runtimeObject.socks5Proxy),
+          });
+        } catch (err) {
+          this.state = STATE_DISCONNECTED;
+          throw err;
+        }
+      }
+    }
+
+    this.configureProxy(wsOptions, parsed, runtimeForProxy, request);
 
     return new Promise<Response>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
@@ -291,7 +318,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
       }, connectTimeout);
 
       let upgradeResponse: http.IncomingMessage | null = null;
-      const ws = new WebSocket(requestURL, wsOptions);
+      const ws = new WebSocket(requestURL, protocols, wsOptions);
 
       ws.on('upgrade', (response) => {
         upgradeResponse = response;
@@ -588,11 +615,18 @@ export class DefaultWebSocketClient implements WebSocketClient {
       return;
     }
 
-    if (protocol === 'wss' || protocol === 'https') {
-      wsOptions.agent = createHttpsProxyAgent(proxyURL) as any;
-    } else {
-      wsOptions.agent = createHttpProxyAgent(proxyURL) as any;
+    // WebSocket always needs CONNECT (http-proxy-agent would send absolute-form GET for ws://).
+    // With ipv4Only, family:4 pins the hop to the proxy; the target is resolved by the proxy.
+    if (runtimeObject.ipv4Only === true) {
+      const proxyHost = urlParse(proxyURL).hostname;
+      if (proxyHost) {
+        assertIPv4OnlyHost(proxyHost);
+      }
     }
+    const proxyOptions: any = runtimeObject.ipv4Only === true
+      ? Object.assign(urlParse(proxyURL), { family: 4 })
+      : proxyURL;
+    wsOptions.agent = createHttpsProxyAgent(proxyOptions) as any;
 
     const parsedProxy = urlParse(proxyURL);
     if (parsedProxy.auth) {
@@ -863,6 +897,48 @@ export function convertToWebSocketMessageType(messageType: number): WebSocketMes
     default:
       return WebSocketMessageType.Binary;
   }
+}
+
+export function ipv4OnlyLookup(hostname: string, options: dns.LookupOptions, callback: (...args: any[]) => void): void {
+  dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
+}
+
+/**
+ * Move Sec-WebSocket-Protocol from headers into the ws `protocols` argument so the
+ * client declares the subprotocol (header-only causes "Server sent a subprotocol but none was requested").
+ */
+export function extractWebSocketProtocols(headers: { [key: string]: string }): string[] {
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === 'sec-websocket-protocol');
+  if (!key) {
+    return [];
+  }
+  const value = headers[key];
+  delete headers[key];
+  if (!value) {
+    return [];
+  }
+  return `${value}`.split(',').map((part) => part.trim()).filter((part) => !!part);
+}
+
+/**
+ * Rewrite a proxy URL so the hop uses an IPv4 address. IPv6-only proxy hosts fail.
+ */
+export async function pinProxyUrlToIpv4(proxyURL: string): Promise<string> {
+  const parsed = urlParse(proxyURL);
+  if (!parsed.hostname) {
+    throw new Error(`invalid proxy URL: ${proxyURL}`);
+  }
+  assertIPv4OnlyHost(parsed.hostname);
+  let host = parsed.hostname;
+  if (!isIPv4(host)) {
+    const resolved = await dns.promises.lookup(host, { family: 4 });
+    host = resolved.address;
+  }
+  const auth = parsed.auth ? `${parsed.auth}@` : '';
+  const port = parsed.port ? `:${parsed.port}` : '';
+  const path = parsed.path || '';
+  const protocol = parsed.protocol || 'http:';
+  return `${protocol}//${auth}${host}${port}${path}`;
 }
 
 function generateSessionID(): string {
