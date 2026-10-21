@@ -552,9 +552,47 @@ describe('$dara retry', function () {
     });
     backoffTime = $dara.getBackoffDelay(option, context)
     assert.strictEqual(backoffTime, 1000);
+  });
 
-  
-    
+  it('backoff policies use the default cap when cap is omitted', function () {
+    const context = new $dara.RetryPolicyContext({
+      retriesAttempted: 2,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    ['Random', 'Exponential', 'EqualJitter', 'ExponentialWithEqualJitter', 'FullJitter', 'ExponentialWithFullJitter'].forEach((policy) => {
+      const backoff = $dara.BackoffPolicy.newBackoffPolicy({ policy, period: 10 });
+      const delay = backoff.getDelayTime(context);
+      assert.strictEqual(typeof delay, 'number');
+      assert.ok(delay >= 0);
+    });
+  });
+
+  it('shouldRetry continues when a no-retry condition does not match', function () {
+    const noRetry = new $dara.RetryCondition({
+      exception: ['OtherErr'],
+      errorCode: ['Other'],
+    });
+    const retry = new $dara.RetryCondition({
+      maxAttempts: 3,
+      exception: ['AErr'],
+      errorCode: ['A1Err'],
+    });
+    const option = new $dara.RetryOptions({
+      retryable: true,
+      retryCondition: [retry],
+      noRetryCondition: [noRetry],
+    });
+    const context = new $dara.RetryPolicyContext({
+      retriesAttempted: 1,
+      exception: new AErr({
+        code: 'A1Err',
+        message: 'a1 error',
+      }),
+    });
+    assert.strictEqual($dara.shouldRetry(option, context), true);
   });
 
 

@@ -15,7 +15,9 @@ describe('$dara file', function () {
 
   it('createTime should ok', async () => {
     const createTime = await file.createTime();
+    const cachedCreateTime = await file.createTime();
     assert.strictEqual(createTime.format('YYYY-MM-DD HH:mm:ss'), moment(stat.birthtime).format('YYYY-MM-DD HH:mm:ss'));
+    assert.strictEqual(cachedCreateTime.unix(), createTime.unix());
     const newFile = new $dara.File(path.join(__dirname, './fixtures/test.txt'));
     const newCreateTime = await newFile.createTime();
     assert.strictEqual(newCreateTime.format('YYYY-MM-DD HH:mm:ss'), moment(stat.birthtime).format('YYYY-MM-DD HH:mm:ss'));

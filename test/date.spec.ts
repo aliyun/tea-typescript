@@ -42,5 +42,9 @@ describe('$dara date', function () {
     // non-Sunday weekday path (Monday → weekday()+1)
     const monday = new $dara.Date('2024-01-01 12:00:00');
     assert.strictEqual(monday.dayOfWeek(), 2);
+
+    // Sunday that still belongs to the previous week's numbering.
+    const newYearSunday = new $dara.Date('2023-01-01 12:00:00');
+    assert.strictEqual(newYearSunday.weekOfMonth(), 1);
   });
 });

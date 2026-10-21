@@ -1302,6 +1302,52 @@ describe('$dara', function () {
     });
   });
 
+  it('doAction without an explicit port should ok', async function () {
+    const request = new $dara.Request();
+    request.protocol = 'http';
+    request.method = 'GET';
+    request.pathname = '/';
+    const port = (server.address() as AddressInfo).port;
+    request.headers['host'] = `127.0.0.1:${port}`;
+    const res = await $dara.doAction(request, { timeout: 1000 });
+    assert.strictEqual(res.statusCode, 200);
+    const bytes = await res.readBytes();
+    assert.strictEqual(bytes.toString(), 'Hello world!');
+  });
+
+  it('cast and validation edge values should ok', function () {
+    const raw = new $dara.BytesReadable(1 as any);
+    assert.strictEqual(raw.value, undefined);
+
+    const emptyField = new $dara.FileField();
+    assert.strictEqual(emptyField.filename, undefined);
+    const field = new $dara.FileField({
+      filename: 'a.txt',
+      contentType: 'text/plain',
+      content: new $dara.BytesReadable('x'),
+    });
+    assert.strictEqual(field.filename, 'a.txt');
+
+    function Plain() { return; }
+    class Holder {
+      value: any
+      static names(): { [key: string]: string } {
+        return { value: 'value' };
+      }
+      static types(): { [key: string]: any } {
+        return { value: Plain };
+      }
+    }
+    const holder = new Holder();
+    const casted = $dara.cast({ value: { a: 1 } }, holder);
+    assert.deepStrictEqual((casted as any).value, { a: 1 });
+
+    class CheckModel extends $dara.Model {
+      validate(): void { return; }
+    }
+    $dara.Model.validateArray([null, 0, '', false, new CheckModel(), ['nested']]);
+  });
+
   it('doAction with keepAlive over https agent path should ok', async function () {
     const request = new $dara.Request();
     request.protocol = 'https';

@@ -18,16 +18,25 @@ describe('$dara url', function () {
     assert.deepStrictEqual(ret.search(), 'api&ok=test');
     assert.deepStrictEqual(ret.href(), 'https://sdk:test@ecs.aliyuncs.com/sdk/?api&ok=test#sddd');
     assert.deepStrictEqual(ret.auth(), 'sdk:test');
+
+    const plain = $dara.URL.parse('https://example.com/path');
+    assert.strictEqual(plain.hash(), '');
+    assert.strictEqual(plain.search(), '');
+    assert.strictEqual(plain.port(), '443');
   });
 
   it('urlEncode should ok', async function () {
     const result = $dara.URL.urlEncode('https://www.baidu.com/')
     assert.strictEqual("https%3A%2F%2Fwww.baidu.com%2F", result);
+    assert.strictEqual($dara.URL.urlEncode(null), '');
+    assert.strictEqual($dara.URL.urlEncode(undefined), '');
   });
 
   it('percentEncode should ok', async function () {
     const result = $dara.URL.percentEncode('https://www.bai+*~du.com/')
     assert.strictEqual("https%3A%2F%2Fwww.bai%2B%2A~du.com%2F", result);
+    assert.strictEqual($dara.URL.percentEncode(null), null);
+    assert.strictEqual($dara.URL.percentEncode(undefined), null);
   });
 
   it('pathEncode should ok', async function () {
