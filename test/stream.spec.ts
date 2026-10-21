@@ -283,4 +283,16 @@ describe('$dara stream', function () {
       retry: 3,
     })], events);
   });
+
+  it('readAsSSE ignores unknown fields', async function () {
+    const stream = new Readable({
+      read() { return; },
+    });
+    const pending = $dara.Stream.readAsSSE(stream).next();
+    stream.push('note: ignore me\n\n');
+    const first = await pending;
+    assert.strictEqual(first.value.data, undefined);
+    assert.strictEqual(first.value.event, undefined);
+    stream.push(null);
+  });
 });
