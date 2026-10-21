@@ -3,7 +3,7 @@
 import http from 'http';
 import https from 'https';
 import { execFileSync } from 'child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'fs';
+import { mkdtempSync, readFileSync, rmdirSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { AddressInfo, Socket } from 'net';
@@ -824,7 +824,9 @@ describe('WebSocket', function () {
           Array.from(wss.clients).forEach((ws) => ws.terminate());
           wss.close(() => server.close(() => resolve()));
         });
-        rmSync(dir, { recursive: true, force: true });
+        unlinkSync(keyPath);
+        unlinkSync(certPath);
+        rmdirSync(dir);
       }
     });
 
@@ -982,7 +984,9 @@ describe('WebSocket', function () {
         localAddr: '',
         attributes: {},
       };
-      client.abortController = new AbortController();
+      client.abortController = {
+        abort(): void { return; },
+      };
       await client.disconnectInternal(1000, 'again');
 
       client.conn = {
