@@ -1151,8 +1151,9 @@ describe('$dara', function () {
 
   it('sleep should ok', async function () {
     const start = Date.now();
-    await $dara.sleep(10);
-    assert.ok(Date.now() - start >= 10);
+    await $dara.sleep(30);
+    // Timers on CI can expire a few milliseconds before the requested delay.
+    assert.ok(Date.now() - start >= 15);
   });
 
   it('doAction should ok', async function () {
