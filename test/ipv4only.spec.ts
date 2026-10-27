@@ -72,6 +72,23 @@ async function get(request: $dara.Request, runtime: { [key: string]: any } = nul
 }
 
 describe('ipv4Only', function () {
+  it('RuntimeOptions should support ipv4Only', function () {
+    assert.strictEqual($dara.RuntimeOptions.names().ipv4Only, 'ipv4Only');
+    assert.strictEqual($dara.RuntimeOptions.types().ipv4Only, 'boolean');
+
+    const defaults = new $dara.RuntimeOptions({});
+    assert.strictEqual(defaults.ipv4Only, undefined);
+    assert.strictEqual(defaults.toMap().ipv4Only, undefined);
+
+    const runtime = new $dara.RuntimeOptions({ ipv4Only: true, keepAlive: false });
+    assert.strictEqual(runtime.ipv4Only, true);
+    assert.strictEqual(runtime.keepAlive, false);
+    assert.strictEqual(runtime.toMap().ipv4Only, true);
+
+    const casted = $dara.cast<$dara.RuntimeOptions>({ ipv4Only: 'true' }, new $dara.RuntimeOptions({}));
+    assert.strictEqual(casted.ipv4Only, true);
+  });
+
   it('getIPv4OnlyAgent should cache per protocol and keepAlive with family 4', function () {
     const httpAgent = $dara.getIPv4OnlyAgent(false, true);
     assert.ok(httpAgent instanceof http.Agent);
@@ -138,12 +155,11 @@ describe('ipv4Only', function () {
       await assert.rejects(() => get(newRequest(v6Port), { ipv4Only: true, connectTimeout: 1000 }), (err: any) => {
         return err.code === 'ECONNREFUSED' || /ECONNREFUSED/.test(err.message);
       });
-      // ipv4Only is read from the plain runtime map (not RuntimeOptions model fields)
-      await assert.rejects(() => get(newRequest(v6Port), {
+      await assert.rejects(() => get(newRequest(v6Port), new $dara.RuntimeOptions({
         ipv4Only: true,
         keepAlive: false,
         connectTimeout: 1000,
-      }));
+      })));
     });
 
     it('ipv4Only=true should succeed against a 127.0.0.1 server', async function () {
@@ -195,9 +211,8 @@ describe('ipv4Only', function () {
 
       const httpsOptions: any = {};
       const request = new $dara.Request();
-      // ipv4Only is read from the plain runtime map, not RuntimeOptions model fields
       client.configureHTTPProxy(httpsOptions, new URL('wss://example.com/ws') as any,
-        { httpsProxy: 'http://user:pass@proxy.example.com:8080', ipv4Only: true } as any, request);
+        new $dara.RuntimeOptions({ httpsProxy: 'http://user:pass@proxy.example.com:8080', ipv4Only: true }), request);
       assert.strictEqual(httpsOptions.agent.proxy.family, 4);
       assert.strictEqual(httpsOptions.agent.proxy.host, 'proxy.example.com');
       assert.strictEqual(httpsOptions.agent.proxy.port, 8080);
@@ -207,7 +222,7 @@ describe('ipv4Only', function () {
 
       const httpOptions: any = {};
       client.configureHTTPProxy(httpOptions, new URL('ws://example.com/ws') as any,
-        { httpProxy: 'http://proxy.example.com:8080', ipv4Only: true } as any, new $dara.Request());
+        new $dara.RuntimeOptions({ httpProxy: 'http://proxy.example.com:8080', ipv4Only: true }), new $dara.Request());
       assert.strictEqual(httpOptions.agent.proxy.family, 4);
       assert.strictEqual(httpOptions.agent.constructor.name, 'HttpsProxyAgent');
 
@@ -218,7 +233,7 @@ describe('ipv4Only', function () {
       assert.strictEqual(dualOptions.agent.constructor.name, 'HttpsProxyAgent');
 
       assert.throws(() => client.configureHTTPProxy({} as any, new URL('ws://example.com/ws') as any,
-        { httpProxy: 'http://[::1]:8080', ipv4Only: true } as any, new $dara.Request()),
+        new $dara.RuntimeOptions({ httpProxy: 'http://[::1]:8080', ipv4Only: true }), new $dara.Request()),
         /ipv4Only is enabled but host ::1 is an IPv6 address/);
     });
 
@@ -265,14 +280,13 @@ describe('ipv4Only', function () {
         return request;
       }
 
-      function runtime(ipv4Only?: boolean): any {
-        // Pass ipv4Only via plain runtime map (not RuntimeOptions model field)
-        return {
+      function runtime(ipv4Only?: boolean): $dara.RuntimeOptions {
+        return new $dara.RuntimeOptions({
           connectTimeout: 2000,
           webSocketPingInterval: 0,
           webSocketEnableReconnect: false,
           ipv4Only,
-        };
+        });
       }
 
       before(async function () {
@@ -315,6 +329,16 @@ describe('ipv4Only', function () {
         await client.close();
       });
 
+      it('connect should not mutate caller Sec-WebSocket-Protocol on request.headers', async function () {
+        const request = wsRequest(v4.server, '127.0.0.1');
+        request.headers = { 'Sec-WebSocket-Protocol': 'dara.v1' };
+        const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
+        await client.connect(request, runtime());
+        assert.strictEqual(request.headers['Sec-WebSocket-Protocol'], 'dara.v1');
+        assert.strictEqual(client.isConnected(), true);
+        await client.close();
+      });
+
       it('ipv4Only should reject an IPv6 literal host', async function () {
         const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
         await assert.rejects(() => client.connect(wsRequest(v6.server, '[::1]'), runtime(true)),
@@ -326,21 +350,26 @@ describe('ipv4Only', function () {
       it('ipv4Only should pin SOCKS5 proxy hop to IPv4 before dialing', async function () {
         const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
         // Pin succeeds (127.0.0.1); dial then fails because no SOCKS listener is running.
-        await assert.rejects(() => client.connect(wsRequest(v4.server), {
-          ...runtime(true),
-          socks5Proxy: 'socks5://127.0.0.1:1',
+        await assert.rejects(() => client.connect(wsRequest(v4.server), new $dara.RuntimeOptions({
           connectTimeout: 500,
-        }));
+          webSocketPingInterval: 0,
+          webSocketEnableReconnect: false,
+          ipv4Only: true,
+          socks5Proxy: 'socks5://127.0.0.1:1',
+        })));
         assert.strictEqual(client.isConnected(), false);
         await client.close();
       });
 
       it('ipv4Only should fail when SOCKS5 proxy host is IPv6-only', async function () {
         const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
-        await assert.rejects(() => client.connect(wsRequest(v4.server), {
-          ...runtime(true),
+        await assert.rejects(() => client.connect(wsRequest(v4.server), new $dara.RuntimeOptions({
+          connectTimeout: 2000,
+          webSocketPingInterval: 0,
+          webSocketEnableReconnect: false,
+          ipv4Only: true,
           socks5Proxy: 'socks5://[::1]:1080',
-        }), /ipv4Only is enabled but host ::1 is an IPv6 address/);
+        })), /ipv4Only is enabled but host ::1 is an IPv6 address/);
         assert.strictEqual(client.isConnected(), false);
         await client.close();
       });

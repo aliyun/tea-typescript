@@ -252,6 +252,7 @@ export class DefaultWebSocketClient implements WebSocketClient {
       ? runtimeObject.connectTimeout
       : 10000;
 
+    // Copy first so extractWebSocketProtocols never mutates the caller's request.headers.
     const headers: { [key: string]: string } = {};
     if (request.headers) {
       Object.keys(request.headers).forEach((k) => {
@@ -615,7 +616,9 @@ export class DefaultWebSocketClient implements WebSocketClient {
       return;
     }
 
-    // WebSocket always needs CONNECT (http-proxy-agent would send absolute-form GET for ws://).
+    // Always use HttpsProxyAgent (CONNECT). HttpProxyAgent for ws:// would send
+    // absolute-form GET, which most proxies reject; this is an intentional behavior
+    // change from older releases that used HttpProxyAgent for plain ws://.
     // With ipv4Only, family:4 pins the hop to the proxy; the target is resolved by the proxy.
     if (runtimeObject.ipv4Only === true) {
       const proxyHost = urlParse(proxyURL).hostname;
@@ -904,8 +907,11 @@ export function ipv4OnlyLookup(hostname: string, options: dns.LookupOptions, cal
 }
 
 /**
- * Move Sec-WebSocket-Protocol from headers into the ws `protocols` argument so the
+ * Move Sec-WebSocket-Protocol from `headers` into the ws `protocols` argument so the
  * client declares the subprotocol (header-only causes "Server sent a subprotocol but none was requested").
+ *
+ * Mutates the given map (deletes the protocol header). Callers that must keep the
+ * original headers intact should pass a copy — `DefaultWebSocketClient.connect` does.
  */
 export function extractWebSocketProtocols(headers: { [key: string]: string }): string[] {
   const key = Object.keys(headers).find((k) => k.toLowerCase() === 'sec-websocket-protocol');
