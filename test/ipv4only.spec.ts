@@ -322,6 +322,28 @@ describe('ipv4Only', function () {
         assert.strictEqual(client.isConnected(), false);
         await client.close();
       });
+
+      it('ipv4Only should pin SOCKS5 proxy hop to IPv4 before dialing', async function () {
+        const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
+        // Pin succeeds (127.0.0.1); dial then fails because no SOCKS listener is running.
+        await assert.rejects(() => client.connect(wsRequest(v4.server), {
+          ...runtime(true),
+          socks5Proxy: 'socks5://127.0.0.1:1',
+          connectTimeout: 500,
+        }));
+        assert.strictEqual(client.isConnected(), false);
+        await client.close();
+      });
+
+      it('ipv4Only should fail when SOCKS5 proxy host is IPv6-only', async function () {
+        const client = $dara.newDefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
+        await assert.rejects(() => client.connect(wsRequest(v4.server), {
+          ...runtime(true),
+          socks5Proxy: 'socks5://[::1]:1080',
+        }), /ipv4Only is enabled but host ::1 is an IPv6 address/);
+        assert.strictEqual(client.isConnected(), false);
+        await client.close();
+      });
     });
   });
 });
