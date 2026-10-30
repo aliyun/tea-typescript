@@ -1,5 +1,42 @@
-export * from './core';
-export * from './websocket';
+export {
+  BytesReadable,
+  Request,
+  Response,
+  doAction,
+  toMap,
+  Model,
+  FileField,
+  ExtendsParameters,
+  RuntimeOptions,
+  cast,
+  allowRetry,
+  getBackoffTime,
+  isRetryable,
+} from './core';
+export {
+  WebSocketMessageType,
+  getWebSocketPingInterval,
+  getWebSocketPongTimeout,
+  getWebSocketEnableReconnect,
+  getWebSocketReconnectInterval,
+  getWebSocketMaxReconnectTimes,
+  getWebSocketWriteTimeout,
+  getWebSocketHandshakeTimeout,
+  getWebSocketHandler,
+  newWebSocketResponse,
+  AbstractWebSocketHandler,
+  DefaultWebSocketClient,
+  newDefaultWebSocketClient,
+  newWebSocketClientAndConnect,
+  buildWebSocketURL,
+  convertToWebSocketMessageType,
+} from './websocket';
+export type {
+  WebSocketMessage,
+  WebSocketSessionInfo,
+  WebSocketHandler,
+  WebSocketClient,
+} from './websocket';
 export { default as Date } from './date';
 export * from './error';
 export { default as File } from './file';

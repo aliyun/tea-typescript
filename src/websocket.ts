@@ -589,7 +589,10 @@ export class DefaultWebSocketClient implements WebSocketClient {
     if (!socks5Proxy) {
       return;
     }
-    wsOptions.agent = new SocksProxyAgent(socks5Proxy) as any;
+    // socks4/socks5 schemes resolve the destination locally inside the agent. Once
+    // an agent is set, ws no longer dials with wsOptions.family/lookup, so ipv4Only
+    // must pin lookup on the agent itself (same contract as Java tea#255).
+    wsOptions.agent = createSocksProxyAgent(socks5Proxy, runtimeObject.ipv4Only === true) as any;
   }
 
   configureHTTPProxy(
@@ -902,8 +905,28 @@ export function convertToWebSocketMessageType(messageType: number): WebSocketMes
   }
 }
 
+/**
+ * @internal IPv4-only dns.lookup wrapper. Not part of the stable public API.
+ */
 export function ipv4OnlyLookup(hostname: string, options: dns.LookupOptions, callback: (...args: any[]) => void): void {
   dns.lookup(hostname, Object.assign({}, options, { family: 4 }), callback);
+}
+
+/**
+ * Create a SOCKS agent. When `ipv4Only`, force destination DNS to A records even if
+ * the caller (e.g. ws) does not forward family/lookup into agent connect options.
+ *
+ * @internal Not part of the stable public API.
+ */
+export function createSocksProxyAgent(socks5Proxy: string, ipv4Only: boolean): SocksProxyAgent {
+  const agent = new SocksProxyAgent(socks5Proxy) as any;
+  if (!ipv4Only) {
+    return agent;
+  }
+  const connect = agent.callback.bind(agent);
+  agent.callback = (req: any, opts: any) =>
+    connect(req, Object.assign({}, opts, { family: 4, lookup: ipv4OnlyLookup }));
+  return agent;
 }
 
 /**
@@ -912,6 +935,8 @@ export function ipv4OnlyLookup(hostname: string, options: dns.LookupOptions, cal
  *
  * Mutates the given map (deletes the protocol header). Callers that must keep the
  * original headers intact should pass a copy — `DefaultWebSocketClient.connect` does.
+ *
+ * @internal Not part of the stable public API.
  */
 export function extractWebSocketProtocols(headers: { [key: string]: string }): string[] {
   const key = Object.keys(headers).find((k) => k.toLowerCase() === 'sec-websocket-protocol');
@@ -928,6 +953,8 @@ export function extractWebSocketProtocols(headers: { [key: string]: string }): s
 
 /**
  * Rewrite a proxy URL so the hop uses an IPv4 address. IPv6-only proxy hosts fail.
+ *
+ * @internal Not part of the stable public API.
  */
 export async function pinProxyUrlToIpv4(proxyURL: string): Promise<string> {
   const parsed = urlParse(proxyURL);

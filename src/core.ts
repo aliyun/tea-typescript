@@ -96,6 +96,9 @@ function buildURL(request: Request) {
 // per-request keepAlive agents) so an IPv4-only request never reuses an IPv6 socket.
 const ipv4OnlyAgents = new Map<string, HttpAgent | HttpsAgent>();
 
+/**
+ * @internal Cached family:4 http(s).Agent. Not part of the stable public API.
+ */
 export function getIPv4OnlyAgent(isHttps: boolean, keepAlive: boolean): HttpAgent | HttpsAgent {
   const key = `${isHttps ? 'https' : 'http'}:keepAlive=${keepAlive}:ipv4Only=true`;
   let agent = ipv4OnlyAgents.get(key);
@@ -109,6 +112,9 @@ export function getIPv4OnlyAgent(isHttps: boolean, keepAlive: boolean): HttpAgen
   return agent;
 }
 
+/**
+ * @internal Reject IPv6 literal hosts when ipv4Only is on. Not part of the stable public API.
+ */
 export function assertIPv4OnlyHost(hostname: string): void {
   if (hostname && isIPv6(hostname)) {
     throw new Error(`ipv4Only is enabled but host ${hostname} is an IPv6 address`);

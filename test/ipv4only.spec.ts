@@ -5,10 +5,14 @@ import http from 'http';
 import https from 'https';
 import 'mocha';
 import assert from 'assert';
-import { AddressInfo } from 'net';
+import { EventEmitter } from 'events';
+import net, { AddressInfo, Socket, Server as NetServer } from 'net';
 import { WebSocketServer } from 'ws';
 
 import * as $dara from '../src/index';
+// Internal helpers are intentionally not re-exported from the package entrypoint.
+import { getIPv4OnlyAgent, assertIPv4OnlyHost } from '../src/core';
+import { ipv4OnlyLookup, extractWebSocketProtocols, pinProxyUrlToIpv4, createSocksProxyAgent } from '../src/websocket';
 
 function createServer(): http.Server {
   return http.createServer((req, res) => {
@@ -27,8 +31,84 @@ function listen(server: http.Server, host: string): Promise<void> {
   });
 }
 
-function close(server: http.Server): Promise<void> {
+function close(server: { close: (cb?: (err?: Error) => void) => void }): Promise<void> {
   return new Promise((resolve) => server.close(() => resolve()));
+}
+
+/**
+ * Minimal SOCKS5 (no auth) that records CONNECT targets as "ipv4:addr" / "ipv6" / "domain:name"
+ * then answers the tunnelled HTTP request with 200 "ok". Mirrors Java Ipv4OnlyTest.startSocks5Server.
+ */
+function startSocks5Server(targets: string[]): Promise<NetServer> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer((socket) => {
+      let buf = Buffer.alloc(0);
+      let stage: 'greeting' | 'connect' | 'http' = 'greeting';
+
+      socket.on('data', (data: Buffer) => {
+        buf = Buffer.concat([buf, data]);
+        if (stage === 'greeting') {
+          if (buf.length < 2) {
+            return;
+          }
+          const nmethods = buf[1];
+          if (buf.length < 2 + nmethods) {
+            return;
+          }
+          socket.write(Buffer.from([0x05, 0x00]));
+          buf = buf.slice(2 + nmethods);
+          stage = 'connect';
+        }
+        if (stage === 'connect') {
+          if (buf.length < 4) {
+            return;
+          }
+          const atyp = buf[3];
+          let offset = 4;
+          let hostLabel = '';
+          if (atyp === 0x01) {
+            if (buf.length < 10) {
+              return;
+            }
+            hostLabel = `ipv4:${buf[4]}.${buf[5]}.${buf[6]}.${buf[7]}`;
+            offset = 10;
+          } else if (atyp === 0x03) {
+            const len = buf[4];
+            if (buf.length < 5 + len + 2) {
+              return;
+            }
+            hostLabel = `domain:${buf.slice(5, 5 + len).toString('binary')}`;
+            offset = 5 + len + 2;
+          } else if (atyp === 0x04) {
+            if (buf.length < 22) {
+              return;
+            }
+            hostLabel = 'ipv6';
+            offset = 22;
+          } else {
+            socket.destroy();
+            return;
+          }
+          targets.push(hostLabel);
+          socket.write(Buffer.from([0x05, 0x00, 0x00, 0x01, 127, 0, 0, 1, 0, 0]));
+          buf = buf.slice(offset);
+          stage = 'http';
+        }
+        if (stage === 'http') {
+          if (!buf.toString('binary').includes('\r\n\r\n')) {
+            return;
+          }
+          socket.end('HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok');
+        }
+      });
+      socket.on('error', () => { /* ignore */ });
+    });
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      server.removeListener('error', reject);
+      resolve(server);
+    });
+  });
 }
 
 async function localhostIsDualStack(): Promise<boolean> {
@@ -90,18 +170,18 @@ describe('ipv4Only', function () {
   });
 
   it('getIPv4OnlyAgent should cache per protocol and keepAlive with family 4', function () {
-    const httpAgent = $dara.getIPv4OnlyAgent(false, true);
+    const httpAgent = getIPv4OnlyAgent(false, true);
     assert.ok(httpAgent instanceof http.Agent);
     assert.ok(!(httpAgent instanceof https.Agent));
     assert.strictEqual((httpAgent as any).options.family, 4);
     assert.strictEqual((httpAgent as any).keepAlive, true);
-    assert.strictEqual($dara.getIPv4OnlyAgent(false, true), httpAgent);
+    assert.strictEqual(getIPv4OnlyAgent(false, true), httpAgent);
 
-    const noKeepAlive = $dara.getIPv4OnlyAgent(false, false);
+    const noKeepAlive = getIPv4OnlyAgent(false, false);
     assert.notStrictEqual(noKeepAlive, httpAgent);
     assert.strictEqual((noKeepAlive as any).keepAlive, false);
 
-    const httpsAgent = $dara.getIPv4OnlyAgent(true, true);
+    const httpsAgent = getIPv4OnlyAgent(true, true);
     assert.ok(httpsAgent instanceof https.Agent);
     assert.strictEqual((httpsAgent as any).options.family, 4);
     assert.notStrictEqual(httpsAgent, http.globalAgent);
@@ -111,10 +191,20 @@ describe('ipv4Only', function () {
   });
 
   it('assertIPv4OnlyHost should reject IPv6 literals only', function () {
-    assert.throws(() => $dara.assertIPv4OnlyHost('::1'), /ipv4Only is enabled but host ::1 is an IPv6 address/);
-    $dara.assertIPv4OnlyHost('127.0.0.1');
-    $dara.assertIPv4OnlyHost('localhost');
-    $dara.assertIPv4OnlyHost('');
+    assert.throws(() => assertIPv4OnlyHost('::1'), /ipv4Only is enabled but host ::1 is an IPv6 address/);
+    assertIPv4OnlyHost('127.0.0.1');
+    assertIPv4OnlyHost('localhost');
+    assertIPv4OnlyHost('');
+  });
+
+  it('package entry should not expose ipv4Only internal helpers', function () {
+    const pkg = $dara as any;
+    assert.strictEqual(pkg.getIPv4OnlyAgent, undefined);
+    assert.strictEqual(pkg.assertIPv4OnlyHost, undefined);
+    assert.strictEqual(pkg.ipv4OnlyLookup, undefined);
+    assert.strictEqual(pkg.extractWebSocketProtocols, undefined);
+    assert.strictEqual(pkg.pinProxyUrlToIpv4, undefined);
+    assert.strictEqual(pkg.createSocksProxyAgent, undefined);
   });
 
   describe('doAction', function () {
@@ -191,19 +281,59 @@ describe('ipv4Only', function () {
   describe('websocket', function () {
     it('ipv4OnlyLookup should only return IPv4 addresses', async function () {
       const single = await new Promise<{ address: string; family: number }>((resolve, reject) => {
-        $dara.ipv4OnlyLookup('localhost', {}, (err: Error, address: string, family: number) => {
+        ipv4OnlyLookup('localhost', {}, (err: Error, address: string, family: number) => {
           return err ? reject(err) : resolve({ address, family });
         });
       });
       assert.strictEqual(single.family, 4);
 
       const all = await new Promise<dns.LookupAddress[]>((resolve, reject) => {
-        $dara.ipv4OnlyLookup('localhost', { all: true }, (err: Error, addrs: dns.LookupAddress[]) => {
+        ipv4OnlyLookup('localhost', { all: true }, (err: Error, addrs: dns.LookupAddress[]) => {
           return err ? reject(err) : resolve(addrs);
         });
       });
       assert.ok(all.length > 0);
       all.forEach((a) => assert.strictEqual(a.family, 4));
+    });
+
+    it('SOCKS ipv4Only must resolve destination to IPv4 (ATYP=IPv4), not IPv6', async function () {
+      // Mirrors Java Ipv4OnlyTest.socks5ProxyGetsResolvedIpv4TargetWhenIpv4Only.
+      const targets: string[] = [];
+      const socks = await startSocks5Server(targets);
+      try {
+        const port = (socks.address() as AddressInfo).port;
+        const client = new $dara.DefaultWebSocketClient(new $dara.AbstractWebSocketHandler());
+        const ipv4Options: any = {};
+        client.configureSOCKS5Proxy(ipv4Options, new $dara.RuntimeOptions({
+          socks5Proxy: `socks5://127.0.0.1:${port}`,
+          ipv4Only: true,
+        }));
+        // Call agent.callback WITHOUT family/lookup in opts — proves the pin lives on the agent
+        // (ws does not reliably forward wsOptions.family/lookup once an agent is set).
+        // Use a fake req: a real http.ClientRequest may race a direct dial to localhost:1.
+        const agent = ipv4Options.agent;
+        const fakeReq: any = new EventEmitter();
+        fakeReq.destroy = () => { /* no-op */ };
+        const socket: Socket = await agent.callback(fakeReq, {
+          host: 'localhost',
+          port: 1,
+          secureEndpoint: false,
+        });
+        await new Promise<void>((resolve, reject) => {
+          socket.write('GET / HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n');
+          let body = '';
+          socket.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+          socket.on('end', () => {
+            assert.ok(body.includes('ok'));
+            resolve();
+          });
+          socket.on('error', reject);
+        });
+        assert.deepStrictEqual(targets, ['ipv4:127.0.0.1']);
+        assert.ok(createSocksProxyAgent(`socks5://127.0.0.1:${port}`, false));
+      } finally {
+        await close(socks);
+      }
     });
 
     it('configureHTTPProxy should pin the proxy hop to IPv4 when ipv4Only', function () {
@@ -239,20 +369,20 @@ describe('ipv4Only', function () {
 
     it('extractWebSocketProtocols should move Sec-WebSocket-Protocol into protocols', function () {
       const headers = { 'Sec-WebSocket-Protocol': 'dara.v1, dara.v2', 'X-Other': '1' };
-      assert.deepStrictEqual($dara.extractWebSocketProtocols(headers), ['dara.v1', 'dara.v2']);
+      assert.deepStrictEqual(extractWebSocketProtocols(headers), ['dara.v1', 'dara.v2']);
       assert.strictEqual(headers['Sec-WebSocket-Protocol'], undefined);
       assert.strictEqual(headers['X-Other'], '1');
-      assert.deepStrictEqual($dara.extractWebSocketProtocols({}), []);
-      assert.deepStrictEqual($dara.extractWebSocketProtocols({ 'Sec-WebSocket-Protocol': '' }), []);
+      assert.deepStrictEqual(extractWebSocketProtocols({}), []);
+      assert.deepStrictEqual(extractWebSocketProtocols({ 'Sec-WebSocket-Protocol': '' }), []);
     });
 
     it('pinProxyUrlToIpv4 should resolve hostnames and reject bad input', async function () {
-      assert.strictEqual(await $dara.pinProxyUrlToIpv4('socks5://127.0.0.1:1080'), 'socks5://127.0.0.1:1080');
-      assert.strictEqual(await $dara.pinProxyUrlToIpv4('socks5://user:pass@127.0.0.1:1080'), 'socks5://user:pass@127.0.0.1:1080');
-      const pinned = await $dara.pinProxyUrlToIpv4('socks5://localhost:1080');
+      assert.strictEqual(await pinProxyUrlToIpv4('socks5://127.0.0.1:1080'), 'socks5://127.0.0.1:1080');
+      assert.strictEqual(await pinProxyUrlToIpv4('socks5://user:pass@127.0.0.1:1080'), 'socks5://user:pass@127.0.0.1:1080');
+      const pinned = await pinProxyUrlToIpv4('socks5://localhost:1080');
       assert.ok(pinned.startsWith('socks5://127.0.0.1:1080'));
-      await assert.rejects(() => $dara.pinProxyUrlToIpv4('socks5://'), /invalid proxy URL/);
-      await assert.rejects(() => $dara.pinProxyUrlToIpv4('socks5://[::1]:1080'), /IPv6 address/);
+      await assert.rejects(() => pinProxyUrlToIpv4('socks5://'), /invalid proxy URL/);
+      await assert.rejects(() => pinProxyUrlToIpv4('socks5://[::1]:1080'), /IPv6 address/);
     });
 
     describe('connect', function () {
