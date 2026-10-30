@@ -390,6 +390,20 @@ describe('WebSocket', function () {
     assert.ok($dara.getWebSocketHandler(runtime));
   });
 
+  it('should keep webSocketHandler through cast, toMap and copy', function () {
+    const handler = new MockWebSocketHandler();
+    const runtime = new $dara.RuntimeOptions({ webSocketHandler: handler });
+
+    const casted = $dara.cast(runtime, new $dara.RuntimeOptions({}));
+    assert.strictEqual(casted.webSocketHandler, handler);
+
+    const fromMap = $dara.cast({ webSocketHandler: handler }, new $dara.RuntimeOptions({}));
+    assert.strictEqual(fromMap.webSocketHandler, handler);
+
+    assert.strictEqual(runtime.toMap().webSocketHandler, handler);
+    assert.strictEqual(new $dara.RuntimeOptions(runtime.toMap()).webSocketHandler, handler);
+  });
+
   it('should use AbstractWebSocketHandler defaults', function () {
     const handler = new $dara.AbstractWebSocketHandler();
     const session: $dara.WebSocketSessionInfo = {
@@ -477,6 +491,7 @@ describe('WebSocket', function () {
       request,
     );
     assert.ok(httpOptions.agent);
+    assert.strictEqual(httpOptions.agent.constructor.name, 'HttpsProxyAgent');
 
     const nullParsed: any = {};
     client.configureHTTPProxy(
