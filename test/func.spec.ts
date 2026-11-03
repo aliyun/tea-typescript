@@ -1,7 +1,6 @@
 import * as $dara from '../src/index';
 import 'mocha';
 import assert from 'assert';
-import moment from 'moment';
 
 describe('$dara func', function () {
 
@@ -37,9 +36,12 @@ describe('$dara func', function () {
   });
 
   it('sleep should ok', async function () {
-    const begin = moment().unix();
+    // Use ms clock: second-granularity unix() can yield 0 when sleep straddles
+    // the same wall-clock second under CI scheduling jitter.
+    const begin = Date.now();
     await $dara.sleep(1000);
-    const end = moment().unix();
-    assert.deepStrictEqual(end - begin, 1);
+    const elapsed = Date.now() - begin;
+    assert.ok(elapsed >= 900, `expected sleep ~1000ms, got ${elapsed}ms`);
+    assert.ok(elapsed < 3000, `expected sleep ~1000ms, got ${elapsed}ms`);
   });
 });
