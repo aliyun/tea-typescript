@@ -25,6 +25,13 @@ describe('$dara url', function () {
     assert.strictEqual(plain.port(), '443');
   });
 
+  it('HTTP(S) 地址不能通过归一化补出缺失的 authority', function () {
+    for (const value of [null, undefined, '', 'http:example.com', 'https:/example.com', 'https:///prefix', 'http:////example.com', 'https://\\example.com']) {
+      assert.throws(() => $dara.URL.parse(value), TypeError);
+    }
+    assert.strictEqual($dara.URL.parse('HTTPS://example.com:8443/prefix').host(), 'example.com:8443');
+  });
+
   it('urlEncode should ok', async function () {
     const result = $dara.URL.urlEncode('https://www.baidu.com/')
     assert.strictEqual("https%3A%2F%2Fwww.baidu.com%2F", result);
