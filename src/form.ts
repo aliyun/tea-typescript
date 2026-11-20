@@ -7,6 +7,8 @@ export class FileFormStream extends Readable {
   keys: string[];
   index: number;
   streaming: boolean;
+  private activeContent?: Readable;
+  private detachContent?: () => void;
 
   constructor(form: { [key: string]: any }, boundary: string) {
     super();
@@ -19,6 +21,8 @@ export class FileFormStream extends Readable {
 
   _read() {
     if (this.streaming) {
+      // 仅在下游继续读取时恢复文件源，避免慢速上传或落盘时缓存整个文件。
+      this.activeContent.resume();
       return;
     }
 
@@ -35,14 +39,28 @@ export class FileFormStream extends Readable {
           `Content-Type: ${fieldValue.contentType}\r\n\r\n`;
         this.push(Buffer.from(body));
         this.streaming = true;
-        fieldValue.content.on('data', (chunk: any) => {
-          this.push(chunk);
-        });
-        fieldValue.content.on('end', () => {
+        const content: Readable = fieldValue.content;
+        this.activeContent = content;
+        const onData = (chunk: any) => {
+          if (!this.push(chunk)) { content.pause(); }
+        };
+        const onError = (error: Error) => { this.destroy(error); };
+        const onEnd = () => {
+          this.detachContent();
+          this.detachContent = undefined;
+          this.activeContent = undefined;
           this.index++;
           this.streaming = false;
           this.push('');
-        });
+        };
+        this.detachContent = () => {
+          content.removeListener('data', onData);
+          content.removeListener('error', onError);
+          content.removeListener('end', onEnd);
+        };
+        content.on('data', onData);
+        content.once('error', onError);
+        content.once('end', onEnd);
       } else {
         this.push(Buffer.from(`--${separator}\r\n` +
           `Content-Disposition: form-data; name="${name}"\r\n\r\n` +
@@ -53,6 +71,14 @@ export class FileFormStream extends Readable {
       this.push(Buffer.from(`\r\n--${separator}--\r\n`));
       this.push(null);
     }
+  }
+
+  _destroy(error: Error | null, callback: (error?: Error | null) => void) {
+    if (this.detachContent) { this.detachContent(); }
+    if (this.activeContent) { this.activeContent.destroy(); }
+    this.activeContent = undefined;
+    this.detachContent = undefined;
+    callback(error);
   }
 }
 

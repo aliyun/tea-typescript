@@ -15,6 +15,10 @@ export default class TeaURL {
   _url: url.URL
 
   constructor(str: string) {
+    // WHATWG URL 会为缺少 authority 的 HTTP(S) 地址补出 Host，需先保留原始语法校验。
+    if (typeof str !== 'string' || (/^https?:/i.test(str) && !/^https?:\/\/[^/\\\s?#]/i.test(str))) {
+      throw new TypeError('Invalid URL');
+    }
     this._url = new url.URL(str);
   }
 
