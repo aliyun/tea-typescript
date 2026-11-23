@@ -470,6 +470,8 @@ export class RuntimeOptions extends $tea.Model {
   maxIdleConns?: number;
   keepAlive?: boolean;
   ipv4Only?: boolean;
+  /** OSS PrivateLink 上传地址（包含 http:// 或 https://），非空时优先于 Config。 */
+  ossPrivateUrl?: string;
   extendsParameters?: ExtendsParameters;
   webSocketPingInterval?: number;
   webSocketPongTimeout?: number;
@@ -499,6 +501,7 @@ export class RuntimeOptions extends $tea.Model {
       maxIdleConns: 'maxIdleConns',
       keepAlive: 'keepAlive',
       ipv4Only: 'ipv4Only',
+      ossPrivateUrl: 'ossPrivateUrl',
       extendsParameters: 'extendsParameters',
       webSocketPingInterval: 'webSocketPingInterval',
       webSocketPongTimeout: 'webSocketPongTimeout',
@@ -516,6 +519,7 @@ export class RuntimeOptions extends $tea.Model {
   static types(): { [key: string]: any } {
     return {
       retryOptions: RetryOptions,
+      ossPrivateUrl: 'string',
       autoretry: 'boolean',
       ignoreSSL: 'boolean',
       key: 'string',

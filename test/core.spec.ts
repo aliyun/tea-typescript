@@ -45,6 +45,18 @@ function read(readable: Readable): Promise<Buffer> {
 
 describe('$dara', function () {
 
+  it('OSS PrivateLink 字段保留构造值和序列化映射', function () {
+    assert.strictEqual($dara.RuntimeOptions.names().ossPrivateUrl, 'ossPrivateUrl');
+    assert.strictEqual($dara.RuntimeOptions.types().ossPrivateUrl, 'string');
+    assert.strictEqual(new $dara.RuntimeOptions().ossPrivateUrl, undefined);
+    for (const endpoint of ['', 'http://localhost:8080/prefix', 'https://oss.example.test']) {
+      const runtime = new $dara.RuntimeOptions({ ossPrivateUrl: endpoint });
+      assert.strictEqual(runtime.ossPrivateUrl, endpoint);
+      assert.strictEqual($dara.toMap(runtime).ossPrivateUrl, endpoint);
+      assert.strictEqual(new $dara.RuntimeOptions($dara.toMap(runtime)).ossPrivateUrl, endpoint);
+    }
+  });
+
   before((done) => {
     server.listen(0, done);
   });
